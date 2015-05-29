@@ -1,0 +1,9 @@
+sunny-as_train.py --> train_scenario.py
+
+scheduling.py: ritorna lo schedule di SUNNY dati in input i parametri
+
+test_scenario.py [OPTIONS] <SCENARIO_PATH>, usa scheduling.py per stampare l'ouput std per ogni istanza dello scenario
+
+split_scenario.py: crea cartella cv_<SCENARIO>, al cui interno cra 2 * N * M cartelle train_I_J/test_I_J
+
+sunny-as_feat_sel.py
