@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 '''
-sunny-as_train [OPTIONS] <SCENARIO_PATH>
+train_scenario [OPTIONS] <SCENARIO_PATH>
 
 Creates a SUNNY knowledge base corresponding to the ASlib scenario contained in 
 <SCENARIO_PATH>. A knowledge base <KB> is basically a folder containing 3 files:

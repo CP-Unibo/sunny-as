@@ -1,9 +1,5 @@
-sunny-as_train.py --> train_scenario.py
+test_scenario.py [OPTIONS] <SCENARIO_PATH>, usa sunny.py per stampare l'ouput std per ogni istanza dello scenario
 
-scheduling.py: ritorna lo schedule di SUNNY dati in input i parametri
+split_scenario.py: crea cartella cv_<SCENARIO>, al cui interno cra 2 * N * M cartelle train_I_J/test_I_J (prima copy poi write)
 
-test_scenario.py [OPTIONS] <SCENARIO_PATH>, usa scheduling.py per stampare l'ouput std per ogni istanza dello scenario
-
-split_scenario.py: crea cartella cv_<SCENARIO>, al cui interno cra 2 * N * M cartelle train_I_J/test_I_J
-
-sunny-as_feat_sel.py
+select_features.py (anche calcolo static solver)
