@@ -1,29 +1,41 @@
 '''
-test_scenario [OPTIONS] <INSTANCE_ID> <FEAT_VECTOR>
+test_scenario [OPTIONS] <SCENARIO_PATH>
+
+Test all the instances of the ASlib scenario according to the SUNNY algorithm. 
+For every instance of the scenario, the corresponding SUNNY schedule is printed 
+on standard output according to the AS standard format:
+
+  instanceID,runID,solver,timeLimit
+
+Before being tested, a scenario must be trained by using train_scenario script.
 
 Options
 =======
   -K <KB_DIR>
-    Knowledge base path (default: $PWD).
+   Path of the SUNNY knowledge base. By default, the path is set to the current 
+   working directory.
   -s <STATIC_SCHEDULE>
-    Static schedule to be run in the presolving phase. By default is empty.
-  -c <COST>
-    Set the feature cost. By default is 0.
+   Static schedule to be run in the presolving phase for each instance of the 
+   scenario. It must be specified in the form: "s_1,t_1,s_2,t_2,...,s_n,t_n"
+   meaning that solver s_i has to run for t_i seconds. By default it is empty.
   -k <NEIGH.SIZE>
-    The default value is sqrt(train set size).
-  -P <S1,...,Sk>
-    The default values are all the solvers.
+   The neighbourhood size of SUNNY algorithm. By default, it is set to sqrt(n) 
+   where n is the size of the knowledge base.
+  -P <s_1,...,s_k>
+   The portfolio used by SUNNY. By default, it contains all the algorithms of 
+   the scenario.
   -b <BACKUP>
-    Set the Backup Solver (default: Single Best Solver).
+   Sets the SUNNY backup solver. By default, SUNNY uses the Single Best Solver 
+   of the portfolio as the backup solver.
   -T <TIMEOUT>
-    Set the timeout of SUNNY algorithm (default: the time limit of the
-    scenario).
+   Sets the timeout of SUNNY algorithm. By default, the scenario cutoff time is 
+   used as timeout.
   -o <FILE>
-    Prints the predictions in <FILE> instead of std output
-    
-Output
-======
-  The prediction on std output as specified in the competition rules.
+   Prints the predicted schedules to <FILE> instead of std output.
+  --print-static
+   Prints also the static schedule before the dynamic one computed by SUNNY.
+   This options is unset by default.
+   FIXME: TBD, Remove feature costs...
 '''
 
 import sys

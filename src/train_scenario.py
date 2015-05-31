@@ -15,19 +15,19 @@ Creates a SUNNY knowledge base corresponding to the ASlib scenario contained in
 Options
 =======
   --feat-range <LB>,<UB>
-  Scales the feature in the range [LB, UB]. The default value is -1,1.
+   Scales the feature in the range [LB, UB]. The default value is -1,1.
   --feat-def <VALUE>
-  The default value for a missing/non-numeric feature. The default value is -1.
+   The default value for a missing/non-numeric feature. The default value is -1.
   --discard
-  Discards the instances not solvable by any solver. Unset by default.
+   Discards the instances not solvable by any solver. Unset by default.
   --kb-path <PATH>
-  Creates the SUNNY knowledge base at the specified path. By default, it is 
-  created in the current working directory.
+   Creates the SUNNY knowledge base at the specified path. By default, it is 
+   created in the current working directory.
   --kb-name <NAME>
-  Creates the SUNNY knowledge base with the specified name, i.e., it creates a 
-  folder <PATH>/<NAME> containing the knowledge base (where <PATH> is the given 
-  knowledge base path). The default name is kb_<SCENARIO>, where <SCENARIO> is 
-  the name of the folder containing the given scenario.
+   Creates the SUNNY knowledge base with the specified name, i.e., it creates a 
+   folder <PATH>/<NAME> containing the knowledge base (where <PATH> is the given 
+   knowledge base path). The default name is kb_<SCENARIO>, where <SCENARIO> is 
+   the name of the folder containing the given scenario.
 '''
 
 import os

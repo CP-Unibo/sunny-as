@@ -158,7 +158,8 @@ def sunny(
   )
   if not backup:
     backup = new_backup
-  if timeout > feat_cost: 
-    return get_schedule(neighbours, timeout - feat_cost, portfolio, k, backup)
+  timeout -= feat_cost + sum(t for (s, t) in static_schedule)
+  if timeout > 0: 
+    return get_schedule(neighbours, timeout, portfolio, k, backup)
   else:
     return []
