@@ -35,7 +35,7 @@ def normalize(feat_vector, lims, inf, sup, def_feat_value):
   return norm_vector
 
 
-def get_neighbours(feat_vector, kb, portfolio, k, timout, instances):
+def get_neighbours(feat_vector, kb, k):
   """
   Returns a dictionary (inst_name, inst_info) of the k instances closer to the 
   feat_vector in the knowledge base kb.
@@ -43,24 +43,13 @@ def get_neighbours(feat_vector, kb, portfolio, k, timout, instances):
   reader = csv.reader(open(kb, 'r'), delimiter = '|')
   infos = {}
   distances = []
-  solved = dict((s, [0, 0.0]) for s in portfolio)
   for row in reader:
     inst = row[0]
-    for (s, it) in eval(row[2]).items():
-      if it['info'] == 'ok':
-        solved[s][0] += 1
-        solved[s][1] += float(it['time'])
-      else:
-        solved[s][1] += timout
     d = euclidean_distance(feat_vector, map(float, row[1][1 : -1].split(',')))
     distances.append((d, inst))
     infos[inst] = row[2]
-    
-  best = min((instances - solved[s][0],
-              solved[s][1], s) for s in solved.keys())
-  backup = best[2]
   distances.sort(key = lambda x : x[0])
-  return dict((inst, infos[inst]) for (d, inst) in distances[0 : k]), backup
+  return dict((inst, infos[inst]) for (d, inst) in distances[0 : k])
 
 
 def euclidean_distance(fv1, fv2):
@@ -144,20 +133,16 @@ def get_schedule(neighbours, timeout, portfolio, k, backup):
   #assert sum(t for (s, t) in sorted_schedule) - timeout < 0.001
   return sorted_schedule
 
-def sunny(
+def get_sunny_schedule(
   lb, ub, def_feat_value, kb_path, kb_name, static_schedule, timeout, k, \
-  portfolio, backup, feat_vector, feat_cost, num_instances
+  portfolio, backup, feat_vector, feat_cost
 ):
   with open(kb_path + kb_name + '.lims') as infile:
     lims = json.load(infile)
   
   norm_vector = normalize(feat_vector, lims, lb, ub, def_feat_value)
   kb = kb_path + kb_name + '.info'
-  neighbours, new_backup = get_neighbours(
-    norm_vector, kb, portfolio, k, timeout, num_instances
-  )
-  if not backup:
-    backup = new_backup
+  neighbours = get_neighbours(norm_vector, kb, k)
   timeout -= feat_cost + sum(t for (s, t) in static_schedule)
   if timeout > 0: 
     return get_schedule(neighbours, timeout, portfolio, k, backup)

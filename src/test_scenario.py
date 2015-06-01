@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 '''
 test_scenario [OPTIONS] <SCENARIO_PATH>
 
@@ -35,17 +37,13 @@ Options
   --print-static
    Prints also the static schedule before the dynamic one computed by SUNNY.
    This options is unset by default.
-   FIXME: TBD, Remove feature costs...
 '''
 
-import sys
 import os
-import getopt
-import csv
+import sys
 import json
-import ast
-from math import sqrt
-from combinations import binom, get_subset
+import getopt
+from sunny import *
 
 def parse_arguments(args):
   '''
@@ -54,38 +52,35 @@ def parse_arguments(args):
   '''
   try:
     long_options = ['help']
-    opts, args = getopt.getopt(args, 'K:s:c:k:P:b:T:o:h:', long_options)
+    opts, args = getopt.getopt(args, 'K:s:k:P:b:T:o:h:', long_options)
   except getopt.GetoptError as msg:
-    print msg
-    print 'For help use --help'
+    print >> sys.stderr, msg
+    print >> sys.stderr, 'For help use --help'
     sys.exit(2)
 
-  if len(args) == 0:
-    print(opts, args)
-    for o in opts:
-      if o in ('-h', '--help'):
-        print(__doc__)
-        sys.exit(0)
-    print 'Error! No arguments given.'
-    print 'For help use --help'
+  if not args:
+    if not opts:
+      print >> sys.stderr, 'Error! No arguments given.'
+      print >> sys.stderr, 'For help use --help'
+      sys.exit(2)
+    else:
+      print __doc__
+      sys.exit(0)
+      
+  scenario = args[0]
+  if scenario[-1] != '/':
+    scenario += '/'
+  if not os.path.exists(scenario):
+    print >> sys.stderr, 'Error: Directory ' + scenario + ' does not exists.'
+    print >> sys.stderr, 'For help use --help'
     sys.exit(2)
-  if len(args) == 1:
-    print(opts, args)
-    for o in opts:
-      if o in ('-h', '--help'):
-        print(__doc__)
-        sys.exit(0)
-    print 'Error! An argument missing.'
-    print 'For help use --help'
-  instance = args[0]
-  feature_values = args[1].split(',')
     
-  # Initialize variables with default values.
+  # Initialize KB variables with default values.
   kb_path = os.getcwd()
   if kb_path[-1] != '/':
     kb_path += '/'
   kb_name = kb_path.split('/')[-2]
-  # KB option parsing.
+  
   for o, a in opts:
     if o == '-K':
       if os.path.exists(a):
@@ -94,26 +89,29 @@ def parse_arguments(args):
           kb_path += '/'
         kb_name = kb_path.split('/')[-2]
       else:
-        print 'Error: ' +a+ ' does not exists.'
-        print 'Using default folder (cwd).'
+        print 'Error: ' + a + ' does not exists.'
+        print >> sys.stderr, 'For help use --help'
+        sys.exit(2)
   # Read arguments.
-  if not os.path.exists(kb_path + kb_name + '.args'):
-    print 'Error: ' + kb_path + kb_name + '.args does not exists.'
-    sys.exit(2)    
-  reader = csv.reader(open(kb_path + kb_name + '.args'), delimiter = '|')
-  for row in reader:
-    lb = int(row[0])
-    ub = int(row[1])
-    def_feat_value = float(row[2])
-    timeout = float(row[3])
-    portfolio = ast.literal_eval(row[5])
-    instances = float(row[6])
-    
-  feature_cost = 0
-  static_schedule = [] # TODO: not defined.
-  k = int(round(sqrt(instances)))
-  backup = None
+  args_file = kb_path + kb_name + '.args'
+  if not os.path.exists(args_file):
+    print >> sys.stderr, 'Error: ' + args_file + ' does not exists.'
+    print >> sys.stderr, 'For help use --help'
+    sys.exit(2)
+  with open(args_file, 'r') as infile:
+    args = json.load(infile)
   out_file = None
+  print_static = False
+  lb = args['lb']
+  ub = args['ub']
+  k = args['neigh_size']
+  backup = args['backup']
+  timeout = args['timeout']
+  feat_def = args['feat_def']
+  portfolio = args['portfolio']
+  # TBD.
+  static_schedule = args['static_schedule']
+  selected_features = args['selected_features']
 
   # Options parsing.
   for o, a in opts:
@@ -121,56 +119,76 @@ def parse_arguments(args):
       print(__doc__)
       sys.exit(0)
     elif o == '-s':
-      static_schedule = a
+      s = a.split(',')
+      static_schedule = []
+      for i in range(0, len(s) / 2):
+        solver = s[2 * i]
+        time = float(s[2 * i + 1])
+        if time < 0:
+          print >> sys.stderr, 'Error! Not acceptable negative time'
+          print >> sys.stderr, 'For help use --help'
+          sys.exit(2)
+        static_schedule.append((solver, time))
     elif o == '-k':
       k = int(a)
-    elif o == '-c':
-      feature_cost = float(a)
     elif o == '-P':
-      s = a.split(',')
-      for sol in s:
-        portfolio.append(sol)
+      portfolio = a.split(',')
     elif o == '-b':
       backup = a
     elif o == '-T':
       timeout = float(a)
     elif o == '-o':
       out_file = a
+    elif o == '--print-static':
+      print_static = True
 
-  return lb, ub, def_feat_value, kb_path, kb_name, static_schedule, timeout, \
-    k, portfolio, backup, out_file, feature_values, feature_cost, instance, instances
+  return k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, \
+    portfolio, backup, out_file, scenario, print_static
   
 def main(args):
-  lb, ub, def_feat_value, kb_path, kb_name, static_schedule, timeout, k, \
-    portfolio, backup, out_file, feature_values, feature_cost, \
-    instance, instances = parse_arguments(args)    
-    
-  with open(kb_path + kb_name + '.lims') as infile:
-    lims = json.load(infile)
+  k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, portfolio, \
+    backup, out_file, scenario, print_static = parse_arguments(args)    
   
-  feats = normalize(feature_values, lims, lb, ub, def_feat_value)
-  kb = kb_path + kb_name + '.info'
-  neighbours, new_backup = get_neighbours(feats, kb, portfolio, k, timeout,
-                                          instances)
-  if not backup:
-    backup = new_backup
-  if timeout > feature_cost: 
-    schedule = get_schedule(neighbours, timeout - feature_cost,
-                              portfolio, k, backup)
-  else:
-    schedule = []
-  runID = 1
+  cost_file = scenario + 'feature_costs.arff'
+  feature_costs = {}
+  if os.path.exists(cost_file):
+    reader = csv.reader(open(cost_file), delimiter = ',')
+    for row in reader:
+      if row and row[0].strip().upper() == '@DATA':
+	# Iterates until preamble ends.
+	break
+    for row in reader:
+      feature_costs[row[0]] = sum(float(f) for f in row[2:])
+  
+  reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
+  for row in reader:
+    if row and row[0].strip().upper() == '@DATA':
+      # Iterates until preamble ends.
+      break
   if out_file:
-    writer = csv.writer(open(out_file, 'w'), delimiter = ',')
-    for sch in schedule:
-      writer.writerow(str(instance) + ',' + str(runID) + ',' + str(sch[0]) + ',' +
-                      str(sch[1]))
-      runID += 1
-  else:
-    for sch in schedule:
-      print(str(instance) + ',' + str(runID) + ',' + str(sch[0]) + ',' +
-            str(sch[1]))
-      runID += 1  
-  
+    writer = open(out_file, 'w')
+  for row in reader:
+    inst = row[0]
+    feat_vector = row[2:]
+    if feature_costs:
+      feat_cost = feature_costs[inst]
+    else:
+      feat_cost = 0
+    schedule = get_sunny_schedule(
+      lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, k, \
+      portfolio, backup, feat_vector, feat_cost
+    )
+    i = 1
+    if print_static:
+      schedule = static + schedule
+    for (s, t) in schedule:
+      row = ''
+      row += inst + ',' + str(i) + ',' + s + ',' + str(t)
+      if out_file:
+        writer.write(row + '\n')
+      else:
+        print row
+      i += 1
+      
 if __name__ == '__main__':
   main(sys.argv[1:])

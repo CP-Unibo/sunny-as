@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+
 '''
 train_scenario [OPTIONS] <SCENARIO_PATH>
 
@@ -35,7 +36,7 @@ import csv
 import sys
 import json
 import getopt
-from math import isnan
+from math import isnan, sqrt
 
 def parse_arguments(args):
   '''
@@ -48,14 +49,14 @@ def parse_arguments(args):
     ]
     opts, args = getopt.getopt(args, None, options)
   except getopt.GetoptError as msg:
-    print msg
-    print 'For help use --help'
+    print >> sys.stderr, msg
+    print >> sys.stderr, 'For help use --help'
     sys.exit(2)
   
   if not args:
     if not opts:
-      print 'Error! No arguments given.'
-      print 'For help use --help'
+      print >> sys.stderr, 'Error! No arguments given.'
+      print >> sys.stderr, 'For help use --help'
       sys.exit(2)
     else:
       print __doc__
@@ -65,8 +66,8 @@ def parse_arguments(args):
   if scenario[-1] != '/':
     scenario += '/'
   if not os.path.exists(scenario):
-    print 'Error: Directory ' + scenario + ' does not exists.'
-    print 'For help use --help'
+    print >> sys.stderr, 'Error: Directory ' + scenario + ' does not exists.'
+    print >> sys.stderr, 'For help use --help'
     sys.exit(2)
     
   # Initialize variables with default values.
@@ -133,9 +134,7 @@ def main(args):
   if not os.path.exists(kb_dir):
     os.makedirs(kb_dir)
   else:
-    print >> sys.stderr, 'Error! Directory ' + kb_dir + ' already exists.'
-    print >> sys.stderr, 'Please choose another name.'
-    sys.exit(2)
+    print >> sys.stderr, 'Warning! Directory ' + kb_dir + ' already exists.'
 
   # Creating <KB>.info
   writer = csv.writer(open(kb_dir  + kb_name + '.info', 'w'), delimiter = '|')
@@ -146,6 +145,7 @@ def main(args):
       # Iterates until preamble ends.
       break
   kb = {}
+  solved = dict((s, [0, 0.0]) for s in pfolio)
   for row in reader:
     inst   = row[0]
     solver = row[2]
@@ -154,9 +154,15 @@ def main(args):
       time = timeout
     else:
       time = float(row[3])
+      solved[solver][0] += 1
+    solved[solver][1] += time
+    
     if inst not in kb.keys():
       kb[inst] = {}
     kb[inst][solver] = {'info': info, 'time': time}
+  # Backup solver.
+  backup = min((-solved[s][0], solved[s][1], s) for s in solved.keys())[2]
+  
   # Processing features.
   reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
   for row in reader:
@@ -165,13 +171,13 @@ def main(args):
       break
   features = {}
   lims = {}
-  instances = []
+  instances = set([])
   for row in reader:
     inst = row[0]
     if inst not in instances:
-      instances.append(inst)
+      instances.add(inst)
     nan = float("nan")
-    feat_vector =[]
+    feat_vector = []
     for f in row[2:]:
       if f == '?':
         feat_vector.append(float("nan"))
@@ -217,10 +223,23 @@ def main(args):
   lim_file = kb_dir + kb_name + '.lims'
   with open(lim_file, 'w') as outfile:
     json.dump(lims, outfile)
-  writer = csv.writer(open(kb_dir + kb_name + '.args', 'w'), delimiter = '|')
-  writer.writerow(
-    [lb, ub, feat_def, timeout, num_features, pfolio, len(instances)]
-  )
+  outfile.close()
+  args = {
+    'lb': lb,
+    'ub': ub,
+    'feat_def': feat_def,
+    'backup':  backup,
+    'timeout': timeout,
+    'portfolio': pfolio,
+    'neigh_size': int(round(sqrt(len(instances)))),
+    'num_features': num_features,
+    # TBD.
+    'static_schedule': [],
+    'selected_features': []
+  }  
+  args_file = kb_dir + kb_name + '.args'
+  with open(args_file, 'w') as outfile:
+    json.dump(args, outfile)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
