@@ -1,7 +1,5 @@
-split_scenario.py: crea cartella cv_<SCENARIO>, al cui interno cra 2 * N * M cartelle train_I_J/test_I_J
+split_scenario.py
 
 make_statistics.py
 
-random_splitting.py (cv random)
-
-select_features.py (con opzione x calcolo static solver)
+select_features.py (including presolving)
