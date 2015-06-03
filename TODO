@@ -1,5 +1,5 @@
-split_scenario.py
-
 make_statistics.py
+
+test over all the scenarios
 
 select_features.py (including presolving)

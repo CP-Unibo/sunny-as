@@ -27,6 +27,7 @@ import os
 import sys
 import csv
 import getopt
+import shutil
 
 def parse_arguments(args):
   '''
@@ -106,6 +107,46 @@ def main(args):
     if fold not in cv[rep].keys():
       cv[rep][fold] = set([])
     cv[rep][fold].add(row[0])
+  num_reps = len(cv)
+  num_folds = len(cv.values()[0])
+  if random:
+    # TODO: Implement this.
+    pass
+  for i in range(1, num_reps + 1):
+    i = str(i)
+    reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
+    for row in reader:
+      if row and row[0].strip().upper() == '@DATA':
+        # Iterates until preamble ends.
+        break
+    for j in range(1, num_folds + 1):
+      j = str(j)
+      train_dir = cv_dir + 'train_' + i + '_' + j + '/'
+      os.makedirs(train_dir)
+      test_dir = cv_dir + 'test_' + i + '_' + j + '/'
+      os.makedirs(test_dir)
+      shutil.copyfile(
+        scenario + 'description.txt', train_dir + 'description.txt'
+      )
+      for infile in [
+        'algorithm_runs.arff', 'feature_values.arff', 'feature_costs.arff'
+      ]:
+	if not os.path.exists(scenario + infile):
+	  continue
+        reader = csv.reader(open(scenario + infile), delimiter = ',')
+        writer_train = csv.writer(open(train_dir + infile, 'w'))
+        writer_test = csv.writer(open(test_dir + infile, 'w'))
+        for row in reader:
+          if row and row[0].strip().upper() == '@DATA':
+            # Iterates until preamble ends.
+            writer_train.writerow(row)
+            writer_test.writerow(row)
+            break
+        for row in reader:
+          if row[0] in cv[i][j]:
+            writer_test.writerow(row)
+          else:
+            writer_train.writerow(row)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
