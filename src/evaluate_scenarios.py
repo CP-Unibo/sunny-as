@@ -6,18 +6,18 @@ from subprocess import Popen
 in_path = os.path.realpath(__file__).split('/')[:-2]
 scenarios = [
   'ASP-POTASSCO',
-  #'CSP-2010',
-  #'MAXSAT12-PMS',
-  #'PREMARSHALLING-ASTAR-2013',
-  #'PROTEUS-2014',
-  #'QBF-2011',
-  #'SAT11-INDU',
-  #'SAT11-HAND',
-  #'SAT11-RAND',
-  #'SAT12-ALL',
-  #'SAT12-HAND',
-  #'SAT12-INDU',
-  #'SAT12-RAND',
+  'CSP-2010',
+  'MAXSAT12-PMS',
+  'PREMARSHALLING-ASTAR-2013',
+  'PROTEUS-2014',
+  'QBF-2011',
+  'SAT11-INDU',
+  'SAT11-HAND',
+  'SAT11-RAND',
+  'SAT12-ALL',
+  'SAT12-HAND',
+  'SAT12-INDU',
+  'SAT12-RAND',
 ]  
 
 for scenario in scenarios:
@@ -64,7 +64,7 @@ for scenario in scenarios:
   for subdir, dirs, files in os.walk(path + '/cv_' + scenario):
     if 'train_' in subdir:
       print 'Training',subdir
-      cmd = 'python train_scenario.py ' + subdir
+      cmd = 'python train_scenario.py --discard ' + subdir
       proc = Popen(cmd.split())
       proc.communicate()
       test_dir = subdir.replace('train_', 'test_')
