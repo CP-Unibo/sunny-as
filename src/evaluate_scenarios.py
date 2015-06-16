@@ -6,18 +6,18 @@ from subprocess import Popen
 in_path = os.path.realpath(__file__).split('/')[:-2]
 scenarios = [
   'ASP-POTASSCO',
-  'CSP-2010',
-  'MAXSAT12-PMS',
-  'PREMARSHALLING-ASTAR-2013',
-  'PROTEUS-2014',
-  'QBF-2011',
-  'SAT11-INDU',
-  'SAT11-HAND',
-  'SAT11-RAND',
-  'SAT12-ALL',
-  'SAT12-HAND',
-  'SAT12-INDU',
-  'SAT12-RAND',
+  #'CSP-2010',
+  #'MAXSAT12-PMS',
+  #'PREMARSHALLING-ASTAR-2013',
+  #'PROTEUS-2014',
+  #'QBF-2011',
+  #'SAT11-INDU',
+  #'SAT11-HAND',
+  #'SAT11-RAND',
+  #'SAT12-ALL',
+  #'SAT12-HAND',
+  #'SAT12-INDU',
+  #'SAT12-RAND',
 ]  
 
 for scenario in scenarios:
@@ -32,16 +32,13 @@ for scenario in scenarios:
       # Iterates until preamble ends.
       break
   for row in reader:
-    inst   = row[0]
-    solver = row[2]
-    info   = row[4]
-    if info != 'ok':
-      time = float('+inf')
-    else:
-      time = float(row[3])
+    inst = row[0]
+    solv = row[2]
+    time = float(row[3])
+    info = row[4]
     if inst not in runtimes.keys():
       runtimes[inst] = {}
-    runtimes[inst][solver] = time
+    runtimes[inst][solv] = [info, time]
   
   if os.path.exists(path + '/feature_costs.arff'):
     print 'Extracting feature costs'
@@ -101,7 +98,7 @@ for scenario in scenarios:
             time = feature_cost[inst]
           else:
             time = 0.0
-	  min_time = min(runtimes[inst].values())
+	  min_time = min(x[1] for x in runtimes[inst].values())
 	  if min_time < timeout:
 	    m += 1
 	    fsi_vbs += 1
@@ -111,18 +108,19 @@ for scenario in scenarios:
         old_inst = inst
         solver = row[2]
         solver_time = float(row[3])
-        if runtimes[inst][solver] <= solver_time:
+        if  runtimes[inst][solver][0] \
+	and runtimes[inst][solver][1] <= solver_time:
 	  par = True
-	  if time + runtimes[inst][solver] >= timeout:
+	  if time + runtimes[inst][solver][1] >= timeout:
 	    par10 += 10 * timeout
 	    inst_solved = False
 	    p += 1
 	  else:
 	    fsi += 1
-	    par10 += time + runtimes[inst][solver]
+	    par10 += time + runtimes[inst][solver][1]
 	    inst_solved = True
         elif time + solver_time < timeout:
-	  time += solver_time
+	  time += min([solver_time, runtimes[inst][solver][1]])
           inst_solved = False
           par = False
         else:
