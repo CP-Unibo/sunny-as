@@ -14,8 +14,7 @@ Before being tested, a scenario must be trained by using train_scenario script.
 Options
 =======
   -K <KB_DIR>
-   Path of the SUNNY knowledge base. By default, the path is set to the current 
-   working directory.
+   Path of the SUNNY knowledge base. By default, is set to <SCENARIO_PATH>
   -s <STATIC_SCHEDULE>
    Static schedule to be run in the presolving phase for each instance of the 
    scenario. It must be specified in the form: "s_1,t_1,s_2,t_2,...,s_n,t_n"
@@ -76,9 +75,7 @@ def parse_arguments(args):
     sys.exit(2)
     
   # Initialize KB variables with default values.
-  kb_path = os.getcwd()
-  if kb_path[-1] != '/':
-    kb_path += '/'
+  kb_path = scenario
   kb_name = kb_path.split('/')[-2]
   
   for o, a in opts:
@@ -158,7 +155,7 @@ def main(args):
 	# Iterates until preamble ends.
 	break
     for row in reader:
-      feature_costs[row[0]] = sum(float(f) for f in row[2:])
+      feature_costs[row[0]] = sum(float(f) for f in row[2:] if f != '?')
   
   reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
   for row in reader:
@@ -166,7 +163,7 @@ def main(args):
       # Iterates until preamble ends.
       break
   if out_file:
-    writer = open(out_file, 'w')
+    writer = csv.writer(open(out_file, 'w'), delimiter = ',')
   for row in reader:
     inst = row[0]
     feat_vector = row[2:]
@@ -182,10 +179,9 @@ def main(args):
     if print_static:
       schedule = static + schedule
     for (s, t) in schedule:
-      row = ''
-      row += inst + ',' + str(i) + ',' + s + ',' + str(t)
+      row = inst + ',' + str(i) + ',' + s + ',' + str(t)
       if out_file:
-        writer.write(row + '\n')
+        writer.writerow(row.split(','))
       else:
         print row
       i += 1

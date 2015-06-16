@@ -22,8 +22,8 @@ Options
   --discard
    Discards the instances not solvable by any solver. Unset by default.
   --kb-path <PATH>
-   Creates the SUNNY knowledge base at the specified path. By default, it is 
-   created in the current working directory.
+   Creates the SUNNY knowledge base at the specified path. By default, it is set
+   to <SCENARIO_PATH>
   --kb-name <NAME>
    Creates the SUNNY knowledge base with the specified name, i.e., it creates a 
    folder <PATH>/<NAME> containing the knowledge base (where <PATH> is the given 
@@ -75,7 +75,7 @@ def parse_arguments(args):
   ub =  1
   feat_def = -1
   discard = False
-  kb_path = os.getcwd()
+  kb_path = scenario
   kb_name = 'kb_' + scenario.split('/')[-2]
 
   # Options parsing.

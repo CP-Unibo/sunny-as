@@ -17,10 +17,11 @@ Options
     given scenario.
   --path <PATH>
     Creates the cv folders at the specified path. By default, <PATH> is set to 
-    the current working directory.
+    the scenario path.
   --random-split
     Creates a random splitting of the training and test sets (by using the same 
     number of repetition and folds). This option is unset by default.
+    TBD.
 '''
 
 import os
@@ -61,7 +62,7 @@ def parse_arguments(args):
     
   # Initialize variables with default values.
   random = False
-  cv_path = os.getcwd()
+  cv_path = scenario
   cv_name = 'cv_' + scenario.split('/')[-2]
 
   # Options parsing.
@@ -100,6 +101,8 @@ def main(args):
       break
   cv = {}
   for row in reader:
+    if len(row) < 3:
+      continue
     rep = row[1]
     fold = row[2]
     if rep not in cv.keys():
