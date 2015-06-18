@@ -19,9 +19,9 @@ Options
     Creates the cv folders at the specified path. By default, <PATH> is set to 
     the scenario path.
   --random-split
+    (TBD)
     Creates a random splitting of the training and test sets (by using the same 
     number of repetition and folds). This option is unset by default.
-    TBD.
 '''
 
 import os
@@ -36,7 +36,7 @@ def parse_arguments(args):
   arguments properly set.
   '''
   try:
-    options = ['name=', 'path=', 'random-split=']
+    options = ['help', 'name=', 'path=', 'random-split=']
     opts, args = getopt.getopt(args, None, options)
   except getopt.GetoptError as msg:
     print >> sys.stderr, msg

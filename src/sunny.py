@@ -7,18 +7,15 @@ import json
 from math import sqrt
 from combinations import binom, get_subset
 
-def normalize(feat_vector, lims, inf, sup, def_feat_value):
+def normalize(feat_vector, selected_features, lims, inf, sup, def_feat_value):
   """
   Normalizes the feature vector in input in the range [inf, sup]
   """
   norm_vector = []
-  i = 0
-  for f in feat_vector:
+  for i in selected_features:
     lb = lims[str(i)][0]
     ub = lims[str(i)][1]
-    i += 1
-    if lb == ub:
-      continue
+    f = feat_vector[i]
     if f == '?':
       f = def_feat_value
     else:
@@ -35,7 +32,7 @@ def normalize(feat_vector, lims, inf, sup, def_feat_value):
   return norm_vector
 
 
-def get_neighbours(feat_vector, kb, k):
+def get_neighbours(feat_vector, selected_features, kb, k):
   """
   Returns a dictionary (inst_name, inst_info) of the k instances closer to the 
   feat_vector in the knowledge base kb.
@@ -45,7 +42,10 @@ def get_neighbours(feat_vector, kb, k):
   distances = []
   for row in reader:
     inst = row[0]
-    d = euclidean_distance(feat_vector, map(float, row[1][1 : -1].split(',')))
+    ori_vector = map(float, row[1][1 : -1].split(','))
+    d = euclidean_distance(
+      feat_vector, [ori_vector[i] for i in selected_features]
+    )
     distances.append((d, inst))
     infos[inst] = row[2]
   distances.sort(key = lambda x : x[0])
@@ -135,14 +135,16 @@ def get_schedule(neighbours, timeout, portfolio, k, backup):
 
 def get_sunny_schedule(
   lb, ub, def_feat_value, kb_path, kb_name, static_schedule, timeout, k, \
-  portfolio, backup, feat_vector, feat_cost
+  portfolio, backup, selected_features, feat_vector, feat_cost
 ):
   with open(kb_path + kb_name + '.lims') as infile:
     lims = json.load(infile)
   
-  norm_vector = normalize(feat_vector, lims, lb, ub, def_feat_value)
+  norm_vector = normalize(
+    feat_vector, selected_features, lims, lb, ub, def_feat_value
+  )
   kb = kb_path + kb_name + '.info'
-  neighbours = get_neighbours(norm_vector, kb, k)
+  neighbours = get_neighbours(norm_vector, selected_features, kb, k)
   timeout -= feat_cost + sum(t for (s, t) in static_schedule)
   if timeout > 0: 
     return get_schedule(neighbours, timeout, portfolio, k, backup)

@@ -140,15 +140,17 @@ def parse_arguments(args):
       print_static = True
 
   return k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, \
-    portfolio, backup, out_file, scenario, print_static
+    portfolio, backup, out_file, scenario, print_static, selected_features
   
 def main(args):
-  k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, portfolio, \
-    backup, out_file, scenario, print_static = parse_arguments(args)    
+  k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, portfolio,  \
+    backup, out_file, scenario, print_static, selected_features                \
+      = parse_arguments(args)
   
   cost_file = scenario + 'feature_costs.arff'
   feature_costs = {}
   if os.path.exists(cost_file):
+    # FIXME: selected_features
     reader = csv.reader(open(cost_file), delimiter = ',')
     for row in reader:
       if row and row[0].strip().upper() == '@DATA':
@@ -173,11 +175,12 @@ def main(args):
       feat_cost = 0
     schedule = get_sunny_schedule(
       lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, k, \
-      portfolio, backup, feat_vector, feat_cost
+      portfolio, backup, selected_features, feat_vector, feat_cost
     )
     i = 1
     if print_static:
       schedule = static + schedule
+      i = 0
     for (s, t) in schedule:
       row = inst + ',' + str(i) + ',' + s + ',' + str(t)
       if out_file:

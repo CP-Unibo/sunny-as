@@ -202,10 +202,8 @@ def main(args):
       continue
     new_feat_vector = []
     for k in range(0, len(feat_vector)):
-      if lims[k][0] == lims[k][1]:
-        # Ignore constant features.
-        continue
-      if isnan(feat_vector[k]):
+      # Constant or not numeric feature.
+      if lims[k][0] == lims[k][1] or isnan(feat_vector[k]):
         new_val = feat_def
       else:
         min_val = lims[k][0]
@@ -228,15 +226,13 @@ def main(args):
     'lb': lb,
     'ub': ub,
     'feat_def': feat_def,
-    'backup':  backup,
+    'backup': backup,
     'timeout': timeout,
     'portfolio': pfolio,
     'neigh_size': int(round(sqrt(len(instances)))),
-    'num_features': num_features,
-    # TBD.
     'static_schedule': [],
-    'selected_features': []
-  }  
+    'selected_features': [k for k, v in lims.items() if v[0] != v[1]]
+  }
   args_file = kb_dir + kb_name + '.args'
   with open(args_file, 'w') as outfile:
     json.dump(args, outfile)

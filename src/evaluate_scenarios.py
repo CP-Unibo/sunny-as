@@ -5,19 +5,19 @@ from subprocess import Popen
 
 in_path = os.path.realpath(__file__).split('/')[:-2]
 scenarios = [
-  'ASP-POTASSCO',
-  'CSP-2010',
-  'MAXSAT12-PMS',
+  #'ASP-POTASSCO',
+  #'CSP-2010',
+  #'MAXSAT12-PMS',
   'PREMARSHALLING-ASTAR-2013',
-  'PROTEUS-2014',
-  'QBF-2011',
-  'SAT11-INDU',
-  'SAT11-HAND',
-  'SAT11-RAND',
-  'SAT12-ALL',
-  'SAT12-HAND',
-  'SAT12-INDU',
-  'SAT12-RAND',
+  #'PROTEUS-2014',
+  #'QBF-2011',
+  #'SAT11-INDU',
+  #'SAT11-HAND',
+  #'SAT11-RAND',
+  #'SAT12-ALL',
+  #'SAT12-HAND',
+  #'SAT12-INDU',
+  #'SAT12-RAND',
 ]  
 
 for scenario in scenarios:
@@ -63,6 +63,7 @@ for scenario in scenarios:
   p = 0
   for subdir, dirs, files in os.walk(path + '/cv_' + scenario):
     if 'train_' in subdir:
+      
       print 'Training',subdir
       cmd = 'python train_scenario.py --discard ' + subdir
       proc = Popen(cmd.split())
@@ -70,11 +71,18 @@ for scenario in scenarios:
       test_dir = subdir.replace('train_', 'test_')
       kb_name = subdir.split('/')[-1]
       pred_file = test_dir + '/predictions.csv'
+      
+      print 'Pre-processing',test_dir
+      cmd = 'python pre_process.py ' + subdir + '/kb_' + kb_name
+      proc = Popen(cmd.split())
+      proc.communicate()
+      
       print 'Testing',test_dir
       cmd = 'python test_scenario.py -o ' + pred_file + ' -K ' + subdir \
           + '/kb_' + kb_name + ' ' + test_dir
       proc = Popen(cmd.split())
       proc.communicate()
+      
       print 'Computing fold statistics'
       reader = csv.reader(open(pred_file), delimiter = ',')
       old_inst = ''
