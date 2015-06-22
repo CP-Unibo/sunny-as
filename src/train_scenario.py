@@ -19,6 +19,10 @@ Options
    Scales the feature in the range [LB, UB]. The default value is -1,1.
   --feat-def <VALUE>
    The default value for a missing/non-numeric feature, by default set to -1.
+  --feat-timeout <TIME>
+   Sets the timeout for a feature step: if <TIME> is exceeded, all the features 
+   belonging to such step are removed. By default is set to T/2, where T is the 
+   solving timeout for the scenario.
   --discard
    Discards all the instances not solvable by any solver. Unset by default.
   --kb-path <PATH>
@@ -29,6 +33,8 @@ Options
    folder <PATH>/<NAME> containing the knowledge base (where <PATH> is the given 
    knowledge base path). The default name is kb_<SCENARIO>, where <SCENARIO> is 
    the name of the folder containing the given scenario.
+  --help
+   Prints this message.
 '''
 
 import os
@@ -45,7 +51,8 @@ def parse_arguments(args):
   '''
   try:
     options = [
-      'feat-range=', 'feat-def=', 'kb-path=', 'kb-name=', 'help', 'discard'
+      'feat-range=', 'feat-def=', 'feat-timeout=', 'kb-path=', 'kb-name=',
+      'help', 'discard'
     ]
     opts, args = getopt.getopt(args, None, options)
   except getopt.GetoptError as msg:
@@ -74,6 +81,7 @@ def parse_arguments(args):
   lb = -1
   ub =  1
   feat_def = -1
+  feat_timeout = -1
   discard = False
   kb_path = scenario
   kb_name = 'kb_' + scenario.split('/')[-2]
@@ -89,6 +97,8 @@ def parse_arguments(args):
       ub = float(s[1])
     elif o == '--feat-def':
       feat_def = float(a)
+    elif o == '--feat-timeout':
+      feat_timeout = float(a)
     elif o == '--discard':
       discard = True
     elif o == '--kb-path':
@@ -102,8 +112,8 @@ def parse_arguments(args):
         kb_path = a
     elif o == '--kb-name':
       kb_name = a
-
-  return scenario, lb, ub, feat_def, discard, kb_path, kb_name
+      
+  return scenario, lb, ub, feat_def, feat_timeout, discard, kb_path, kb_name
 
 
 def parse_description(path):
@@ -112,10 +122,12 @@ def parse_description(path):
     - the list of the algorithms of the scenario;
     - the runtime limit for the scenario;
     - the number of features used in the scenario.
+    - the features belonging to each step of the scenario
   '''
   reader = csv.reader(open(path + 'description.txt'), delimiter = ':')
   num_features = 0
   pfolio = []
+  feature_steps = {}
   for row in reader:
     key = row[0]
     if key == 'algorithm_cutoff_time':
@@ -124,12 +136,18 @@ def parse_description(path):
       pfolio += [x.strip() for x in row[1].split(',') if x.strip()]
     elif key in ['features_deterministic', 'features_stochastic']:
       num_features += len([x for x in row[1].split(',') if x.strip()])
-  return pfolio, timeout, num_features
+    elif 'feature_step ' in key:
+      step = key.split(' ')[1]
+      feature_steps[step] = row[1].split(',')
+  return pfolio, timeout, num_features, feature_steps
 
 def main(args):
   # Setting variables.
-  scenario, lb, ub, feat_def, discard, kb_path, kb_name = parse_arguments(args)
-  pfolio, timeout, num_features = parse_description(scenario)
+  scenario, lb, ub, feat_def, feat_timeout, discard, kb_path, kb_name = \
+    parse_arguments(args)
+  pfolio, timeout, num_features, feature_steps = parse_description(scenario)
+  if feat_timeout < 0:
+    feat_timeout = timeout / 2
   kb_dir = kb_path + '/' + kb_name + '/'
   if not os.path.exists(kb_dir):
     os.makedirs(kb_dir)
@@ -164,9 +182,41 @@ def main(args):
   backup = min((-solved[s][0], solved[s][1], s) for s in solved.keys())[2]
   
   # Processing features.
+  cost_file = scenario + 'feature_costs.arff'
+  if os.path.exists(cost_file):
+    reader = csv.reader(open(scenario + 'feature_costs.arff'), delimiter = ',')
+    i = 0
+    # fn[i] is the name of the i-th feature step.
+    fn = {}
+    for row in reader:
+      if row and '@ATTRIBUTE' in row[0] \
+      and 'instance_id' not in row[0] and 'repetition' not in row[0]:
+	fn[i] = row[0].strip().split(' ')[1]
+	i += 1
+      elif row and row[0].strip().upper() == '@DATA':
+	# Iterates until preamble ends.
+	break
+    for row in reader:
+      i = 0
+      for cost in row[2:]:
+	if cost != '?' and float(cost) > feat_timeout and \
+	fn[i] in feature_steps.keys():
+	  del feature_steps[fn[i]]
+	i += 1
+    selected_features = []
+    for fs in feature_steps.values():
+      selected_features += fs
+  
   reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
-  for row in reader:
-    if row and row[0].strip().upper() == '@DATA':
+  i = 0
+  # fn[i] is now the name of the i-th feature.
+  fn = {}
+  for row in reader:  
+    if row and '@ATTRIBUTE' in row[0] \
+    and 'instance_id' not in row[0] and 'repetition' not in row[0]:
+      fn[i] = row[0].strip().split(' ')[1]
+      i += 1
+    elif row and row[0].strip().upper() == '@DATA':
       # Iterates until preamble ends.
       break
   features = {}
@@ -217,11 +267,13 @@ def main(args):
     kb_row = [inst, new_feat_vector, kb[inst]]
     writer.writerow(kb_row)
 
-  # Creating <KB>.lims and <KB>.args
+  # Creating <KB>.lims
   lim_file = kb_dir + kb_name + '.lims'
   with open(lim_file, 'w') as outfile:
     json.dump(lims, outfile)
   outfile.close()
+  
+  # Creating <KB>.args
   args = {
     'lb': lb,
     'ub': ub,
@@ -231,7 +283,12 @@ def main(args):
     'portfolio': pfolio,
     'neigh_size': int(round(sqrt(len(instances)))),
     'static_schedule': [],
-    'selected_features': [k for k, v in lims.items() if v[0] != v[1]]
+    'selected_features': [
+      k for k, v in lims.items() 
+      if v[0] != v[1] and 
+      (not os.path.exists(cost_file) or fn[k] in selected_features)
+    ],
+    'feature_steps': feature_steps.keys(),
   }
   args_file = kb_dir + kb_name + '.args'
   with open(args_file, 'w') as outfile:

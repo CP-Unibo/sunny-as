@@ -36,6 +36,8 @@ Options
   --print-static
    Prints also the static schedule before the dynamic one computed by SUNNY.
    This options is unset by default.
+  --help
+   Prints this message.
 '''
 
 import os
@@ -50,7 +52,7 @@ def parse_arguments(args):
   arguments properly set.
   '''
   try:
-    long_options = ['help']
+    long_options = ['help', 'print-static']
     opts, args = getopt.getopt(args, 'K:s:k:P:b:T:o:h:', long_options)
   except getopt.GetoptError as msg:
     print >> sys.stderr, msg
@@ -106,7 +108,6 @@ def parse_arguments(args):
   timeout = args['timeout']
   feat_def = args['feat_def']
   portfolio = args['portfolio']
-  # TBD.
   static_schedule = args['static_schedule']
   selected_features = args['selected_features']
 
@@ -180,7 +181,8 @@ def main(args):
     )
     i = 1
     if print_static:
-      schedule = static + schedule
+      schedule = static_schedule + schedule
+      print static_schedule
       i = 0
     for (s, t) in schedule:
       row = inst + ',' + str(i) + ',' + s + ',' + str(t)
