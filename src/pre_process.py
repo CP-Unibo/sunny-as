@@ -41,7 +41,7 @@ def parse_arguments(args):
   '''
   try:
     options = [
-      'help', '--static-schedule', 'feat-algorithm=', 'num-features=', 
+      'help', 'static-schedule', 'feat-algorithm=', 'num-features=', 
       'kb-path=',
     ]
     opts, args = getopt.getopt(args, None, options)
@@ -105,15 +105,36 @@ def parse_arguments(args):
   return args_file, scenario, kb_path, feat_timeout, feat_algorithm, \
     num_features, static_schedule
 
-def select_features(feat_algorithm, num_features, selected_features):
+# PRE-MARSHALLING: selected_features[0:1]
+def select_features(feat_algorithm, num_features, selected_features, args):
   # TBD
-  return selected_features #[selected_features[0]]
+  return selected_features #[0:1]
   # Modify also feature_steps
 
-def compute_schedule():
+#[(backup, T/(10*m))]
+# ASP-POTASSCO: 577.5 (-)
+# CSP-2010: 6617.3 (-)
+# MAXSAT12-PMS: 3789.5 (-)
+# PREMARSHALLING-ASTAR-2013: 2221.6 (=)
+# PROTEUS-2014: 
+# QBF-2011: 8981.3 (+)
+# SAT11-HAND: 19070.8 (+)
+# SAT11-INDU: 13111.6 (+) (backup, 1)
+# SAT11-RAND: 10183.7 (-)
+# SAT12-ALL: 
+# SAT12-HAND: 
+# SAT12-INDU: 
+# SAT12-RAND: 
+def compute_schedule(args):
   # TBD
-  return [('glucose_2', 500)]
-    
+  solver = args['backup']
+  time = args['timeout'] / (10 * len(args['portfolio']))
+  return [(solver, time)] 
+
+  
+
+
+
 def main(args):
   args_file, scenario, kb_path, feat_timeout, feat_algorithm, num_features, \
     static_schedule = parse_arguments(args)
@@ -124,13 +145,13 @@ def main(args):
   # Feature selection.
   if feat_algorithm:
     selected_features = select_features(
-      feat_algorithm, num_features, args['selected_features']
+      feat_algorithm, num_features, args['selected_features'], args
     )
     args['selected_features'] = selected_features
     
   # Static schedule.
   if static_schedule:
-    static_schedule = compute_schedule()
+    static_schedule = compute_schedule(args)
     args['static_schedule'] = static_schedule
     
   with open(args_file, 'w') as outfile:

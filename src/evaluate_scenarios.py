@@ -10,8 +10,8 @@ scenarios = [
   #'MAXSAT12-PMS',
   #'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
-  #'QBF-2011',
-  'SAT11-INDU',
+  'QBF-2011',
+  #'SAT11-INDU',
   #'SAT11-HAND',
   #'SAT11-RAND',
   #'SAT12-ALL',
@@ -63,7 +63,7 @@ for scenario in scenarios:
       pred_file = test_dir + '/predictions.csv'
       
       print 'Pre-processing',test_dir
-      cmd = 'python pre_process.py --feat-algorithm symmetric ' + subdir + '/kb_' + kb_name
+      cmd = 'python pre_process.py --feat-algorithm symmetric --static-schedule ' + subdir + '/kb_' + kb_name
       proc = Popen(cmd.split())
       proc.communicate()
       
@@ -101,7 +101,6 @@ for scenario in scenarios:
       print 'Computing fold statistics'
       reader = csv.reader(open(pred_file), delimiter = ',')
       old_inst = ''
-      inst_solved = False
       par = True
       args_file = subdir + '/kb_' + kb_name + '/kb_' + kb_name + '.args'
       with open(args_file) as infile:
@@ -121,35 +120,31 @@ for scenario in scenarios:
             time = feature_cost[inst]
           else:
             time = 0.0
-	  min_time = min(x[1] for x in runtimes[inst].values())
-	  if min_time < timeout:
+          times = [x[1] for x in runtimes[inst].values() if x[0] == 'ok']
+	  if times:
 	    m += 1
 	    fsi_vbs += 1
-	    par10_vbs += min_time
+	    par10_vbs += min(times)
 	  else:
 	    par10_vbs += 10 * timeout
         old_inst = inst
         solver = row[2]
         solver_time = float(row[3])
-        if  runtimes[inst][solver][0] \
+        if  runtimes[inst][solver][0] == 'ok' \
 	and runtimes[inst][solver][1] <= solver_time:
 	  par = True
 	  if time + runtimes[inst][solver][1] >= timeout:
 	    par10 += 10 * timeout
-	    inst_solved = False
 	    p += 1
 	  else:
 	    fsi += 1
 	    par10 += time + runtimes[inst][solver][1]
-	    inst_solved = True
         elif time + min([solver_time, runtimes[inst][solver][1]]) < timeout:
 	  time += min([solver_time, runtimes[inst][solver][1]])
-          inst_solved = False
           par = False
         else:
 	  par10 += 10 * timeout
 	  par = True
-	  inst_solved = False
 	  p += 1
 	  
       if not par:
