@@ -22,6 +22,8 @@ Options
     (TBD)
     Creates a random splitting of the training and test sets (by using the same 
     number of repetition and folds). This option is unset by default.
+  --help
+   Prints this message.
 '''
 
 import os
@@ -113,15 +115,10 @@ def main(args):
   num_reps = len(cv)
   num_folds = len(cv.values()[0])
   if random:
-    # TODO: Implement this.
+    # TBD: Implement this.
     pass
   for i in range(1, num_reps + 1):
     i = str(i)
-    reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
-    for row in reader:
-      if row and row[0].strip().upper() == '@DATA':
-        # Iterates until preamble ends.
-        break
     for j in range(1, num_folds + 1):
       j = str(j)
       train_dir = cv_dir + 'train_' + i + '_' + j + '/'
@@ -140,10 +137,10 @@ def main(args):
         writer_train = csv.writer(open(train_dir + infile, 'w'))
         writer_test = csv.writer(open(test_dir + infile, 'w'))
         for row in reader:
+	  writer_train.writerow(row)
+          writer_test.writerow(row)
           if row and row[0].strip().upper() == '@DATA':
             # Iterates until preamble ends.
-            writer_train.writerow(row)
-            writer_test.writerow(row)
             break
         for row in reader:
           if row[0] in cv[i][j]:

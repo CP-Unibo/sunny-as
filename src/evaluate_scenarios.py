@@ -8,10 +8,10 @@ scenarios = [
   #'ASP-POTASSCO',
   #'CSP-2010',
   #'MAXSAT12-PMS',
-  'PREMARSHALLING-ASTAR-2013',
+  #'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
   #'QBF-2011',
-  #'SAT11-INDU',
+  'SAT11-INDU',
   #'SAT11-HAND',
   #'SAT11-RAND',
   #'SAT12-ALL',
@@ -40,17 +40,7 @@ for scenario in scenarios:
       runtimes[inst] = {}
     runtimes[inst][solv] = [info, time]
   
-  if os.path.exists(path + '/feature_costs.arff'):
-    print 'Extracting feature costs'
-    reader = csv.reader(open(path + '/feature_costs.arff'), delimiter = ',')
-    for row in reader:
-      if row and row[0].strip().upper() == '@DATA':
-        # Iterates until preamble ends.
-        break
-    feature_cost = {}
-    for row in reader:
-      feature_cost[row[0]] = sum(float(f) for f in row[2:] if f != '?')
-    
+  print 'Splitting scenario',scenario
   cmd = 'python split_scenario.py ' + path
   proc = Popen(cmd.split())
   proc.communicate()
@@ -65,7 +55,7 @@ for scenario in scenarios:
     if 'train_' in subdir:
       
       print 'Training',subdir
-      cmd = 'python train_scenario.py --discard ' + subdir
+      cmd = 'python train_scenario.py ' + subdir
       proc = Popen(cmd.split())
       proc.communicate()
       test_dir = subdir.replace('train_', 'test_')
@@ -73,7 +63,7 @@ for scenario in scenarios:
       pred_file = test_dir + '/predictions.csv'
       
       print 'Pre-processing',test_dir
-      cmd = 'python pre_process.py ' + subdir + '/kb_' + kb_name
+      cmd = 'python pre_process.py --feat-algorithm symmetric ' + subdir + '/kb_' + kb_name
       proc = Popen(cmd.split())
       proc.communicate()
       
@@ -82,6 +72,31 @@ for scenario in scenarios:
 	  + subdir + '/kb_' + kb_name + ' ' + test_dir
       proc = Popen(cmd.split())
       proc.communicate()
+      
+      if os.path.exists(path + '/feature_costs.arff'):
+	print 'Extracting feature costs'
+	args_file = subdir + '/kb_' + kb_name + '/kb_' + kb_name + '.args'
+	with open(args_file) as infile:
+	  args = json.load(infile)
+	feature_steps = args['feature_steps']
+	feature_cost = {}
+	reader = csv.reader(open(path + '/feature_costs.arff'), delimiter = ',')
+	for row in reader:
+	  steps = set([])
+	  i = 2
+	  if row and '@ATTRIBUTE' in row[0] \
+	  and 'instance_id' not in row[0] and 'repetition' not in row[0]:
+	    if row[0].strip().split(' ')[1] in feature_steps:
+	      steps.add(i)
+	    i += 1
+	  elif row and row[0].strip().upper() == '@DATA':
+	    # Iterates until preamble ends.
+	    break
+	for row in reader:
+	  feature_cost[row[0]] = 0
+	  for i in steps:
+	    if row[i] != '?':
+	      feature_cost[row[0]] += float(row[i])
       
       print 'Computing fold statistics'
       reader = csv.reader(open(pred_file), delimiter = ',')
@@ -127,7 +142,7 @@ for scenario in scenarios:
 	    fsi += 1
 	    par10 += time + runtimes[inst][solver][1]
 	    inst_solved = True
-        elif time + solver_time < timeout:
+        elif time + min([solver_time, runtimes[inst][solver][1]]) < timeout:
 	  time += min([solver_time, runtimes[inst][solver][1]])
           inst_solved = False
           par = False

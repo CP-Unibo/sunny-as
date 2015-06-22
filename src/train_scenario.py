@@ -211,7 +211,7 @@ def main(args):
   i = 0
   # fn[i] is now the name of the i-th feature.
   fn = {}
-  for row in reader:  
+  for row in reader:
     if row and '@ATTRIBUTE' in row[0] \
     and 'instance_id' not in row[0] and 'repetition' not in row[0]:
       fn[i] = row[0].strip().split(' ')[1]

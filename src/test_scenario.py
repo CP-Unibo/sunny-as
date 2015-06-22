@@ -108,6 +108,7 @@ def parse_arguments(args):
   timeout = args['timeout']
   feat_def = args['feat_def']
   portfolio = args['portfolio']
+  feature_steps = args['feature_steps']
   static_schedule = args['static_schedule']
   selected_features = args['selected_features']
 
@@ -140,25 +141,35 @@ def parse_arguments(args):
     elif o == '--print-static':
       print_static = True
 
-  return k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, \
-    portfolio, backup, out_file, scenario, print_static, selected_features
+  return k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout,      \
+    portfolio, backup, out_file, scenario, print_static, selected_features,    \
+      feature_steps
   
 def main(args):
   k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, portfolio,  \
-    backup, out_file, scenario, print_static, selected_features                \
+    backup, out_file, scenario, print_static, selected_features, feature_steps \
       = parse_arguments(args)
   
   cost_file = scenario + 'feature_costs.arff'
   feature_costs = {}
   if os.path.exists(cost_file):
-    # FIXME: selected_features
     reader = csv.reader(open(cost_file), delimiter = ',')
     for row in reader:
-      if row and row[0].strip().upper() == '@DATA':
+      steps = set([])
+      i = 2
+      if row and '@ATTRIBUTE' in row[0] \
+      and 'instance_id' not in row[0] and 'repetition' not in row[0]:
+	if row[0].strip().split(' ')[1] in feature_steps:
+	  steps.add(i)
+	i += 1
+      elif row and row[0].strip().upper() == '@DATA':
 	# Iterates until preamble ends.
 	break
     for row in reader:
-      feature_costs[row[0]] = sum(float(f) for f in row[2:] if f != '?')
+      feature_costs[row[0]] = 0
+      for i in steps:
+	if row[i] != '?':
+	  feature_costs[row[0]] += float(row[i])
   
   reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
   for row in reader:
@@ -182,7 +193,6 @@ def main(args):
     i = 1
     if print_static:
       schedule = static_schedule + schedule
-      print static_schedule
       i = 0
     for (s, t) in schedule:
       row = inst + ',' + str(i) + ',' + s + ',' + str(t)

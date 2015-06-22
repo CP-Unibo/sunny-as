@@ -107,11 +107,12 @@ def parse_arguments(args):
 
 def select_features(feat_algorithm, num_features, selected_features):
   # TBD
-  return [selected_features[0]]
+  return selected_features #[selected_features[0]]
+  # Modify also feature_steps
 
 def compute_schedule():
   # TBD
-  return []
+  return [('glucose_2', 500)]
     
 def main(args):
   args_file, scenario, kb_path, feat_timeout, feat_algorithm, num_features, \
@@ -129,7 +130,6 @@ def main(args):
     
   # Static schedule.
   if static_schedule:
-    print static_schedule
     static_schedule = compute_schedule()
     args['static_schedule'] = static_schedule
     
