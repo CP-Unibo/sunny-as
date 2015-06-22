@@ -173,6 +173,7 @@ def main(args):
       feat_cost = feature_costs[inst]
     else:
       feat_cost = 0
+    # Get the schedule computed by SUNNY algorithm.
     schedule = get_sunny_schedule(
       lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, k, \
       portfolio, backup, selected_features, feat_vector, feat_cost

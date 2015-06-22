@@ -79,7 +79,7 @@ for scenario in scenarios:
       
       print 'Testing',test_dir
       cmd = 'python test_scenario.py -o ' + pred_file + ' -K ' + subdir \
-          + '/kb_' + kb_name + ' ' + test_dir
+          + '--print-static /kb_' + kb_name + ' ' + test_dir
       proc = Popen(cmd.split())
       proc.communicate()
       

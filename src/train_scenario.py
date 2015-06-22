@@ -6,11 +6,11 @@ train_scenario [OPTIONS] <SCENARIO_PATH>
 Creates a SUNNY knowledge base corresponding to the ASlib scenario contained in 
 <SCENARIO_PATH>. A knowledge base <KB> is basically a folder containing 3 files:
 
-  <KB>.infos  contains the runtimes and the feature vectors 
+  <KB>.infos  csv file containing the runtimes and the feature vectors 
   
-  <KB>.lims   contains the lower/upper bounds for each feature
+  <KB>.lims   python dict containing the lower/upper bounds for each feature
   
-  <KB>.args   contains the arguments needed for SUNNY predictions
+  <KB>.args   python dict containing the arguments needed by SUNNY algorithm
 
 
 Options
@@ -18,9 +18,9 @@ Options
   --feat-range <LB>,<UB>
    Scales the feature in the range [LB, UB]. The default value is -1,1.
   --feat-def <VALUE>
-   The default value for a missing/non-numeric feature. The default value is -1.
+   The default value for a missing/non-numeric feature, by default set to -1.
   --discard
-   Discards the instances not solvable by any solver. Unset by default.
+   Discards all the instances not solvable by any solver. Unset by default.
   --kb-path <PATH>
    Creates the SUNNY knowledge base at the specified path. By default, it is set
    to <SCENARIO_PATH>
@@ -70,7 +70,7 @@ def parse_arguments(args):
     print >> sys.stderr, 'For help use --help'
     sys.exit(2)
     
-  # Initialize variables with default values.
+  # Initialize the variables with default values.
   lb = -1
   ub =  1
   feat_def = -1
@@ -239,3 +239,4 @@ def main(args):
 
 if __name__ == '__main__':
   main(sys.argv[1:])
+  
