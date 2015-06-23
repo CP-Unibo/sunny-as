@@ -138,7 +138,7 @@ def parse_description(path):
       num_features += len([x for x in row[1].split(',') if x.strip()])
     elif 'feature_step ' in key:
       step = key.split(' ')[1]
-      feature_steps[step] = row[1].split(',')
+      feature_steps[step] = [x.strip() for x in row[1].split(',') if x.strip()]
   return pfolio, timeout, num_features, feature_steps
 
 def main(args):

@@ -105,26 +105,11 @@ def parse_arguments(args):
   return args_file, scenario, kb_path, feat_timeout, feat_algorithm, \
     num_features, static_schedule
 
-# PRE-MARSHALLING: selected_features[0:1]
 def select_features(feat_algorithm, num_features, selected_features, args):
   # TBD
   return selected_features #[0:1]
   # Modify also feature_steps
 
-#[(backup, T/(10*m))]
-# ASP-POTASSCO: 577.5 (-)
-# CSP-2010: 6617.3 (-)
-# MAXSAT12-PMS: 3789.5 (-)
-# PREMARSHALLING-ASTAR-2013: 2221.6 (=)
-# PROTEUS-2014: 
-# QBF-2011: 8981.3 (+)
-# SAT11-HAND: 19070.8 (+)
-# SAT11-INDU: 13111.6 (+) (backup, 1)
-# SAT11-RAND: 10183.7 (-)
-# SAT12-ALL: 
-# SAT12-HAND: 
-# SAT12-INDU: 
-# SAT12-RAND: 
 def compute_schedule(args):
   # TBD
   solver = args['backup']
