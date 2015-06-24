@@ -17,7 +17,7 @@ scenarios = [
   #'QBF-2011',
   #'SAT11-HAND',
   #'SAT11-INDU',
-  'SAT11-RAND',
+  #'SAT11-RAND',
   #'SAT12-ALL',
   #'SAT12-HAND',
   #'SAT12-INDU',
@@ -74,15 +74,23 @@ for scenario in scenarios:
       proc.communicate()
       
       print 'Testing',test_dir
-      options = ' '#-f VCG_CLAUSE_min,saps_FirstLocalMinStep_Q10,gsat_BestSolution_Mean,cl_size_mean,nclauses '
+      options = ' '#-f  '
+      #
+      # InfoGain Selected Features
+      #
       # ASP: Running_Avg_LBD-4,Learnt_from_Loop-1,Frac_Learnt_from_Loop-1,Literals_in_Conflict_Nogoods-1,Literals_in_Loop_Nogoods-1
       # CSP: Local_Variance,stats_tightness_75,normalised_width_of_graph,normalised_median_degree,stats_cts_per_var_mean
       # MAX-SAT: horn,vcg_var_spread,vcg_var_min,vcg_var_max,vcg_cls_mean
       # PREMARSHALLING: container-density,group-same-mean,stacks,group-same-stdev,tiers
+      # PROTEUS: csp_perten_avg_predshape,csp_perten_avg_predsize,csp_sqrt_max_domsize,csp_sqrt_avg_domsize,directorder_reducedVars
       # QBF: FORALL_POS_LITS_PER_CLAUSE,EXIST_VARS_PER_SET,LITN_LIT,OCCP_OCCN,NEG_HORN_CLAUSE
       # SAT11-HAND: BINARYp,horn_clauses_fraction,SP_bias_q25,VCG_CLAUSE_coeff_variation,lobjois_mean_depth_over_vars
       # SAT11-INDU: saps_BestAvgImprovement_Mean,VG_min,VG_coeff_variation,VG_max,CG_coeff_variation
       # SAT11-RAND: VCG_CLAUSE_min,saps_FirstLocalMinStep_Q10,gsat_BestSolution_Mean,cl_size_mean,nclauses
+      # SAT12-ALL: SP_unconstraint_q25,vars_clauses_ratio,SP_unconstraint_mean,SP_unconstraint_q75,POSNEG_RATIO_CLAUSE_entropy
+      # SAT12-HAND: reducedClauses,SP_bias_coeff_variation,horn_clauses_fraction,SP_unconstraint_max,POSNEG_RATIO_CLAUSE_min
+      # SAT12-INDU: POSNEG_RATIO_VAR_entropy,VCG_VAR_coeff_variation,VCG_VAR_entropy,reducedVars,POSNEG_RATIO_VAR_stdev
+      # SAT12-RAND: VCG_VAR_mean,VCG_CLAUSE_mean,saps_BestSolution_Mean,VCG_CLAUSE_min,VCG_CLAUSE_max
       
       cmd = 'python test_scenario.py ' + options + ' -o ' + pred_file \
 	  + ' --print-static -K ' + subdir + '/kb_' + kb_name + ' ' + test_dir
