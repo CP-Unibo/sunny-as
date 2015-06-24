@@ -25,8 +25,11 @@ def normalize(feat_vector, selected_features, lims, inf, sup, def_feat_value):
       elif f > ub:
         f = sup
       else:
-        x = (f - lb) / (ub - lb)
-        f = inf + (sup - inf) * x
+	if ub - lb != 0:
+          x = (f - lb) / (ub - lb)
+          f = inf + (sup - inf) * x
+        else:
+	  f = def_feat_value
         assert inf <= f <= sup
     norm_vector.append(f)
   return norm_vector

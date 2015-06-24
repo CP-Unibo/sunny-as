@@ -33,6 +33,10 @@ Options
    used as timeout.
   -o <FILE>
    Prints the predicted schedules to <FILE> instead of std output.
+  -f <f_1,...,f_k>
+   Specifies the features to be used for the solvers prediction. By default, all
+   the features resulting from the training phase are used.
+  
   --print-static
    Prints also the static schedule before the dynamic one computed by SUNNY.
    This options is unset by default.
@@ -53,7 +57,7 @@ def parse_arguments(args):
   '''
   try:
     long_options = ['help', 'print-static']
-    opts, args = getopt.getopt(args, 'K:s:k:P:b:T:o:h:', long_options)
+    opts, args = getopt.getopt(args, 'K:s:k:P:b:T:o:h:f:', long_options)
   except getopt.GetoptError as msg:
     print >> sys.stderr, msg
     print >> sys.stderr, 'For help use --help'
@@ -100,7 +104,9 @@ def parse_arguments(args):
   with open(args_file, 'r') as infile:
     args = json.load(infile)
   out_file = None
+  new_features = None
   print_static = False
+  
   lb = args['lb']
   ub = args['ub']
   k = args['neigh_size']
@@ -138,8 +144,39 @@ def parse_arguments(args):
       timeout = float(a)
     elif o == '-o':
       out_file = a
+    elif o == '-f':
+      new_features = a.split(',')
     elif o == '--print-static':
       print_static = True
+
+  if new_features:
+    i = 0
+    selected_features = []
+    reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
+    for row in reader:
+      if row and '@ATTRIBUTE' in row[0].strip().upper() \
+      and 'instance_id' not in row[0] and 'repetition' not in row[0]:
+	feature = row[0].strip().split(' ')[1]
+	if feature in new_features:
+	  selected_features.append(i)
+	  
+	i += 1
+      elif row and row[0].strip().upper() == '@DATA':
+        # Iterates until preamble ends.
+        break
+    for (step, features) in feature_steps.items():
+      if not set(features).intersection(new_features):
+	del feature_steps[step]
+    
+    args_file = kb_path + kb_name + '.args'
+    with open(args_file, 'r') as infile:
+      args = json.load(infile)
+    infile.close()
+    
+    args['selected_features'] = selected_features
+    args['feature_steps'] = feature_steps
+    with open(args_file, 'w') as outfile:
+      json.dump(args, outfile)
 
   return k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout,      \
     portfolio, backup, out_file, scenario, print_static, selected_features,    \
@@ -157,9 +194,9 @@ def main(args):
     for row in reader:
       steps = set([])
       i = 2
-      if row and '@ATTRIBUTE' in row[0] \
+      if row and '@ATTRIBUTE' in row[0].strip().upper()  \
       and 'instance_id' not in row[0] and 'repetition' not in row[0]:
-	if row[0].strip().split(' ')[1] in feature_steps:
+	if row[0].strip().split(' ')[1] in feature_steps.keys():
 	  steps.add(i)
 	i += 1
       elif row and row[0].strip().upper() == '@DATA':

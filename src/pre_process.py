@@ -13,14 +13,7 @@ Options
   PATH of the SUNNY knowledge base for the specified scenario. By default, it is 
   set to <SCENARIO_PATH>.
 --feat-algorithm <ALGORITHM>
-  Sets the WEKA algorithm for feature selection. Possible choices are: 
-    symmetric:  cfr... TBD 
-    gain_ratio: cfr... TBD
-    info_gain:  cfr... TBD
-  The installation of WEKA is required for this option (unset by default).
---num-features <NUM>
-  The number of selected features. To be used together with --feat-algorithm 
-  option. By default, <NUM> is set to 5.
+  Performs feature selection (TBD)
 --static-schedule 
   Computes a static schedule. Unset by default. (TBD)
 --help
@@ -102,26 +95,21 @@ def parse_arguments(args):
   
   kb_name = kb_path.split('/')[-2]
   args_file = kb_path + '/' + kb_name + '.args' 
-  return args_file, scenario, kb_path, feat_timeout, feat_algorithm, \
-    num_features, static_schedule
+  return args_file, scenario, feat_timeout, feat_algorithm, num_features, \
+    static_schedule
 
 def select_features(feat_algorithm, num_features, selected_features, args):
-  # TBD
   return selected_features #[0:1]
-  # Modify also feature_steps
+  # TBD (Modify also feature_steps)
 
-def compute_schedule(args):
+def compute_schedule(args, max_time = 10):
   # TBD
   solver = args['backup']
   time = args['timeout'] / (10 * len(args['portfolio']))
-  return [(solver, time)] 
-
-  
-
-
+  return [(solver, min(time, max_time))]
 
 def main(args):
-  args_file, scenario, kb_path, feat_timeout, feat_algorithm, num_features, \
+  args_file, scenario, feat_timeout, feat_algorithm, num_features, \
     static_schedule = parse_arguments(args)
   with open(args_file) as infile:
     args = json.load(infile)

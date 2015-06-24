@@ -1,3 +1,7 @@
+'''
+Evaluate different ASlib scenarios.
+'''
+
 import os
 import csv
 import json
@@ -13,11 +17,11 @@ scenarios = [
   #'QBF-2011',
   #'SAT11-HAND',
   #'SAT11-INDU',
-  #'SAT11-RAND',
+  'SAT11-RAND',
   #'SAT12-ALL',
   #'SAT12-HAND',
   #'SAT12-INDU',
-  'SAT12-RAND',
+  #'SAT12-RAND',
 ]  
 
 for scenario in scenarios:
@@ -55,7 +59,8 @@ for scenario in scenarios:
     if 'train_' in subdir:
       
       print 'Training',subdir
-      cmd = 'python train_scenario.py --discard ' + subdir
+      options = ' ' + '--discard --feat-timeout 500 ' + ' '
+      cmd = 'python train_scenario.py ' + options + subdir
       proc = Popen(cmd.split())
       proc.communicate()
       test_dir = subdir.replace('train_', 'test_')
@@ -63,13 +68,24 @@ for scenario in scenarios:
       pred_file = test_dir + '/predictions.csv'
       
       print 'Pre-processing',test_dir
-      cmd = 'python pre_process.py --feat-algorithm symmetric --static-schedule ' + subdir + '/kb_' + kb_name
+      options = ' ' + '--static-schedule' + ' '
+      cmd = 'python pre_process.py' + options + subdir + '/kb_' + kb_name
       proc = Popen(cmd.split())
       proc.communicate()
       
       print 'Testing',test_dir
-      cmd = 'python test_scenario.py -o ' + pred_file + ' --print-static -K ' \
-	  + subdir + '/kb_' + kb_name + ' ' + test_dir
+      options = ' '#-f VCG_CLAUSE_min,saps_FirstLocalMinStep_Q10,gsat_BestSolution_Mean,cl_size_mean,nclauses '
+      # ASP: Running_Avg_LBD-4,Learnt_from_Loop-1,Frac_Learnt_from_Loop-1,Literals_in_Conflict_Nogoods-1,Literals_in_Loop_Nogoods-1
+      # CSP: Local_Variance,stats_tightness_75,normalised_width_of_graph,normalised_median_degree,stats_cts_per_var_mean
+      # MAX-SAT: horn,vcg_var_spread,vcg_var_min,vcg_var_max,vcg_cls_mean
+      # PREMARSHALLING: container-density,group-same-mean,stacks,group-same-stdev,tiers
+      # QBF: FORALL_POS_LITS_PER_CLAUSE,EXIST_VARS_PER_SET,LITN_LIT,OCCP_OCCN,NEG_HORN_CLAUSE
+      # SAT11-HAND: BINARYp,horn_clauses_fraction,SP_bias_q25,VCG_CLAUSE_coeff_variation,lobjois_mean_depth_over_vars
+      # SAT11-INDU: saps_BestAvgImprovement_Mean,VG_min,VG_coeff_variation,VG_max,CG_coeff_variation
+      # SAT11-RAND: VCG_CLAUSE_min,saps_FirstLocalMinStep_Q10,gsat_BestSolution_Mean,cl_size_mean,nclauses
+      
+      cmd = 'python test_scenario.py ' + options + ' -o ' + pred_file \
+	  + ' --print-static -K ' + subdir + '/kb_' + kb_name + ' ' + test_dir
       proc = Popen(cmd.split())
       proc.communicate()
       

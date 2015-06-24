@@ -189,7 +189,7 @@ def main(args):
     # fn[i] is the name of the i-th feature step.
     fn = {}
     for row in reader:
-      if row and '@ATTRIBUTE' in row[0] \
+      if row and '@ATTRIBUTE' in row[0].strip().upper()  \
       and 'instance_id' not in row[0] and 'repetition' not in row[0]:
 	fn[i] = row[0].strip().split(' ')[1]
 	i += 1
@@ -212,7 +212,7 @@ def main(args):
   # fn[i] is now the name of the i-th feature.
   fn = {}
   for row in reader:
-    if row and '@ATTRIBUTE' in row[0] \
+    if row and '@ATTRIBUTE' in row[0].strip().upper()  \
     and 'instance_id' not in row[0] and 'repetition' not in row[0]:
       fn[i] = row[0].strip().split(' ')[1]
       i += 1
@@ -288,7 +288,7 @@ def main(args):
       if v[0] != v[1] and 
       (not os.path.exists(cost_file) or fn[k] in selected_features)
     ],
-    'feature_steps': feature_steps.keys(),
+    'feature_steps': feature_steps,
   }
   args_file = kb_dir + kb_name + '.args'
   with open(args_file, 'w') as outfile:
