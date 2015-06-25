@@ -34,9 +34,10 @@ Options
   -o <FILE>
    Prints the predicted schedules to <FILE> instead of std output.
   -f <f_1,...,f_k>
-   Specifies the features to be used for the solvers prediction. By default, all
-   the features resulting from the training phase are used.
-  
+   Specifies the features to be used for solvers prediction. By default, all the 
+   features resulting from the training phase (possibly pre-processed) are used.
+  -m <MAX-SIZE>
+   Maximum sub-portfolio size. By default, it is set to the portfolio size.
   --print-static
    Prints also the static schedule before the dynamic one computed by SUNNY.
    This options is unset by default.
@@ -57,7 +58,7 @@ def parse_arguments(args):
   '''
   try:
     long_options = ['help', 'print-static']
-    opts, args = getopt.getopt(args, 'K:s:k:P:b:T:o:h:f:', long_options)
+    opts, args = getopt.getopt(args, 'K:s:k:P:b:T:o:h:f:m:', long_options)
   except getopt.GetoptError as msg:
     print >> sys.stderr, msg
     print >> sys.stderr, 'For help use --help'
@@ -118,6 +119,8 @@ def parse_arguments(args):
   static_schedule = args['static_schedule']
   selected_features = args['selected_features']
 
+  max_size = len(portfolio)
+  
   # Options parsing.
   for o, a in opts:
     if o in ('-h', '--help'):
@@ -146,33 +149,31 @@ def parse_arguments(args):
       out_file = a
     elif o == '-f':
       new_features = a.split(',')
+    elif o == '-m':
+      max_size = int(a)
+      if max_size < 1 or max_size > len(portfolio):
+        print >> sys.stderr, 'Error! Not acceptable size'
+        print >> sys.stderr, 'For help use --help'
+        sys.exit(2)
     elif o == '--print-static':
       print_static = True
-
+        
   if new_features:
-    i = 0
-    selected_features = []
-    reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
-    for row in reader:
-      if row and '@ATTRIBUTE' in row[0].strip().upper() \
-      and 'instance_id' not in row[0] and 'repetition' not in row[0]:
-	feature = row[0].strip().split(' ')[1]
-	if feature in new_features:
-	  selected_features.append(i)
-	  
-	i += 1
-      elif row and row[0].strip().upper() == '@DATA':
-        # Iterates until preamble ends.
-        break
-    for (step, features) in feature_steps.items():
-      if not set(features).intersection(new_features):
-	del feature_steps[step]
+    selected_features = dict(
+      (feature, index)
+      for (feature, index) in selected_features.items() 
+      if feature in new_features
+    )
+    feature_steps = dict(
+      (step, features) 
+      for (step, features) in feature_steps.items()
+      if set(features).intersection(new_features)
+    )
     
     args_file = kb_path + kb_name + '.args'
     with open(args_file, 'r') as infile:
       args = json.load(infile)
     infile.close()
-    
     args['selected_features'] = selected_features
     args['feature_steps'] = feature_steps
     with open(args_file, 'w') as outfile:
@@ -180,12 +181,12 @@ def parse_arguments(args):
 
   return k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout,      \
     portfolio, backup, out_file, scenario, print_static, selected_features,    \
-      feature_steps
+      feature_steps, max_size
   
 def main(args):
   k, lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, portfolio,  \
-    backup, out_file, scenario, print_static, selected_features, feature_steps \
-      = parse_arguments(args)
+    backup, out_file, scenario, print_static, selected_features, feature_steps,\
+      max_size = parse_arguments(args)
   
   cost_file = scenario + 'feature_costs.arff'
   feature_costs = {}
@@ -225,7 +226,7 @@ def main(args):
     # Get the schedule computed by SUNNY algorithm.
     schedule = get_sunny_schedule(
       lb, ub, feat_def, kb_path, kb_name, static_schedule, timeout, k, \
-      portfolio, backup, selected_features, feat_vector, feat_cost
+      portfolio, backup, selected_features, feat_vector, feat_cost, max_size
     )
     i = 1
     if print_static:

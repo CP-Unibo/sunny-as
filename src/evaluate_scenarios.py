@@ -8,8 +8,9 @@ import json
 from subprocess import Popen
 
 in_path = os.path.realpath(__file__).split('/')[:-2]
+# List of the scenarios to test.
 scenarios = [
-  #'ASP-POTASSCO',
+  'ASP-POTASSCO',
   #'CSP-2010',
   #'MAXSAT12-PMS',
   #'PREMARSHALLING-ASTAR-2013',
@@ -59,7 +60,7 @@ for scenario in scenarios:
     if 'train_' in subdir:
       
       print 'Training',subdir
-      options = ' ' + '--discard --feat-timeout 500 ' + ' '
+      options = ' --discard '
       cmd = 'python train_scenario.py ' + options + subdir
       proc = Popen(cmd.split())
       proc.communicate()
@@ -68,18 +69,18 @@ for scenario in scenarios:
       pred_file = test_dir + '/predictions.csv'
       
       print 'Pre-processing',test_dir
-      options = ' ' + '--static-schedule' + ' '
+      options = ' -E TODO -S TODO --static-schedule '
       cmd = 'python pre_process.py' + options + subdir + '/kb_' + kb_name
       proc = Popen(cmd.split())
       proc.communicate()
       
       print 'Testing',test_dir
-      options = ' '#-f  '
+      options = ' -f Running_Avg_LBD-4,Learnt_from_Loop-1,Frac_Learnt_from_Loop-1,Literals_in_Conflict_Nogoods-1,Literals_in_Loop_Nogoods-1 '
       #
-      # InfoGain Selected Features
+      # InfoGain Selected Features (5 features).
       #
       # ASP: Running_Avg_LBD-4,Learnt_from_Loop-1,Frac_Learnt_from_Loop-1,Literals_in_Conflict_Nogoods-1,Literals_in_Loop_Nogoods-1
-      # CSP: Local_Variance,stats_tightness_75,normalised_width_of_graph,normalised_median_degree,stats_cts_per_var_mean
+      # CSP: stats_Local_Variance,stats_tightness_75,normalised_width_of_graph,normalised_median_degree,stats_cts_per_var_mean
       # MAX-SAT: horn,vcg_var_spread,vcg_var_min,vcg_var_max,vcg_cls_mean
       # PREMARSHALLING: container-density,group-same-mean,stacks,group-same-stdev,tiers
       # PROTEUS: csp_perten_avg_predshape,csp_perten_avg_predsize,csp_sqrt_max_domsize,csp_sqrt_avg_domsize,directorder_reducedVars
@@ -185,3 +186,20 @@ for scenario in scenarios:
   print 'PAR 10 SUNNY:', par10 / n
   print 'PAR 10 VBS:', par10_vbs / n
   print '===========================================\n'
+
+# Results with --discard, --static-schedule, -f f1,...,f5
+#		PAR10	FSI
+#ASP 		600.0	0.905
+#CSP 		6606.0	0.870
+#MAXSAT 	3420.0	0.840
+#PREMARSH 	1655.7	0.964
+#PROTEUS 	5146.0	0.859
+#QBF 		8980.8	0.756
+#SAT11-HAND 	18241.4	0.642
+#SAT11-INDU 	12765.5	0.753
+#SAT11-RAND 	9921.8	0.805
+#SAT12-ALL  	1458.2	0.888
+#SAT12-HAND 	4633.1	0.622
+#SAT12-INDU 	2854.8	0.770
+#SAT12-RAND 	3291.9	0.729
+

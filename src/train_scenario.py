@@ -283,11 +283,15 @@ def main(args):
     'portfolio': pfolio,
     'neigh_size': int(round(sqrt(len(instances)))),
     'static_schedule': [],
-    'selected_features': [
-      k for k, v in lims.items() 
+    # selected_features[F] is the index of feature F in the original feature 
+    # space.
+    'selected_features': dict(
+      (fn[k], k)
+      for k, v in lims.items() 
       if v[0] != v[1] and 
       (not os.path.exists(cost_file) or fn[k] in selected_features)
-    ],
+    ),
+    # feature_steps[S] is the list of all the features belonging to step S.
     'feature_steps': feature_steps,
   }
   args_file = kb_dir + kb_name + '.args'

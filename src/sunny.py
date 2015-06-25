@@ -67,10 +67,9 @@ def euclidean_distance(fv1, fv2):
   return sqrt(distance)
 
 
-def get_schedule(neighbours, timeout, portfolio, k, backup):
+def get_schedule(neighbours, timeout, portfolio, k, backup, max_size):
   """
-  Given the neighborhood of a given problem and the backup solver, returns the 
-  corresponding SUNNY schedule.
+  Returns the corresponding SUNNY schedule.
   """
  
   # Dictionaries for keeping track of the instances solved and the runtimes. 
@@ -91,7 +90,7 @@ def get_schedule(neighbours, timeout, portfolio, k, backup):
   max_solved = 0
   min_time = float('+inf')
   best_pfolio = []
-  m = len(portfolio)
+  m = max_size
   for i in range(1, m + 1):
     old_pfolio = best_pfolio
     
@@ -138,8 +137,9 @@ def get_schedule(neighbours, timeout, portfolio, k, backup):
 
 def get_sunny_schedule(
   lb, ub, def_feat_value, kb_path, kb_name, static_schedule, timeout, k, \
-  portfolio, backup, selected_features, feat_vector, feat_cost
+  portfolio, backup, selected_features, feat_vector, feat_cost, max_size
 ):
+  selected_features = sorted(selected_features.values())
   with open(kb_path + kb_name + '.lims') as infile:
     lims = json.load(infile)
   
@@ -150,6 +150,6 @@ def get_sunny_schedule(
   neighbours = get_neighbours(norm_vector, selected_features, kb, k)
   timeout -= feat_cost + sum(t for (s, t) in static_schedule)
   if timeout > 0: 
-    return get_schedule(neighbours, timeout, portfolio, k, backup)
+    return get_schedule(neighbours, timeout, portfolio, k, backup, max_size)
   else:
     return []
