@@ -111,8 +111,8 @@ def parse_arguments(args):
         kb_path = a
   
   kb_name = kb_path.split('/')[-2]
-  args_file = kb_path + '/' + kb_name + '.args'
-  info_file = kb_path + '/' + kb_name + '.info'
+  args_file = kb_path + '/kb_' + kb_name + '.args'
+  info_file = kb_path + '/kb_' + kb_name + '.info'
   return args_file, info_file, scenario, evaluator, search, static_schedule
 
 def select_features(args, info_file, evaluator, search):

@@ -10,10 +10,10 @@ from subprocess import Popen
 in_path = os.path.realpath(__file__).split('/')[:-2]
 # List of the scenarios to test.
 scenarios = [
-  'ASP-POTASSCO',
+  #'ASP-POTASSCO',
   #'CSP-2010',
   #'MAXSAT12-PMS',
-  #'PREMARSHALLING-ASTAR-2013',
+  'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
   #'QBF-2011',
   #'SAT11-HAND',
@@ -69,13 +69,14 @@ for scenario in scenarios:
       pred_file = test_dir + '/predictions.csv'
       
       print 'Pre-processing',test_dir
-      options = ' -E TODO -S TODO --static-schedule '
-      cmd = 'python pre_process.py' + options + subdir + '/kb_' + kb_name
+      options = ' --kb-path ' + subdir + '/kb_' + kb_name \
+	      + ' -E TODO -S TODO --static-schedule '
+      cmd = 'python pre_process.py' + options + subdir
       proc = Popen(cmd.split())
       proc.communicate()
       
       print 'Testing',test_dir
-      options = ' -f Running_Avg_LBD-4,Learnt_from_Loop-1,Frac_Learnt_from_Loop-1,Literals_in_Conflict_Nogoods-1,Literals_in_Loop_Nogoods-1 '
+      options = ' -f container-density,group-same-mean,stacks,group-same-stdev,tiers '
       #
       # InfoGain Selected Features (5 features).
       #
