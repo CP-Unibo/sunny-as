@@ -173,7 +173,7 @@ def select_features(args, info_file, scenario, evaluator, search):
     if row:
       if row[0] == '@attribute' and row[1] != 'best_solver':
 	new_features.append(row[1])
-      if row[0] == '@data':
+      elif row[0] == '@data':
 	break
   selected_features = dict(
     (feature, index) 

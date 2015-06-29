@@ -10,15 +10,15 @@ from subprocess import Popen
 in_path = os.path.realpath(__file__).split('/')[:-2]
 # List of the scenarios to test.
 scenarios = [
-  #'ASP-POTASSCO',
-  #'CSP-2010',
-  #'MAXSAT12-PMS',
+  'ASP-POTASSCO',
+  'CSP-2010',
+  'MAXSAT12-PMS',
   'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
-  #'QBF-2011',
-  #'SAT11-HAND',
-  #'SAT11-INDU',
-  #'SAT11-RAND',
+  'QBF-2011',
+  'SAT11-HAND',
+  'SAT11-INDU',
+  'SAT11-RAND',
   #'SAT12-ALL',
   #'SAT12-HAND',
   #'SAT12-INDU',
@@ -61,7 +61,7 @@ for scenario in scenarios:
     if 'train_' in subdir:
       
       print 'Training',subdir
-      options = ' --discard '
+      options = ' --discard --feat-timeout +inf '
       cmd = 'python ' + src_path + 'train_scenario.py ' + options + subdir
       proc = Popen(cmd.split())
       proc.communicate()
