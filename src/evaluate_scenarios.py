@@ -13,9 +13,9 @@ scenarios = [
   #'ASP-POTASSCO',
   #'CSP-2010',
   #'MAXSAT12-PMS',
-  #'PREMARSHALLING-ASTAR-2013',
+  'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
-  'QBF-2011',
+  #'QBF-2011',
   #'SAT11-HAND',
   #'SAT11-INDU',
   #'SAT11-RAND',
@@ -62,7 +62,7 @@ for scenario in scenarios:
       
       print 'Training',subdir
       options = ' --discard '
-      cmd = 'python train_scenario.py ' + options + subdir
+      cmd = 'python ' + src_path + 'train_scenario.py ' + options + subdir
       proc = Popen(cmd.split())
       proc.communicate()
       test_dir = subdir.replace('train_', 'test_')
@@ -79,7 +79,7 @@ for scenario in scenarios:
 	'-S', 'weka.attributeSelection.Ranker -N 5', 
 	'--static-schedule'
       ]
-      cmd = ['python', 'pre_process.py'] + options + subdir.split()
+      cmd = ['python', src_path + 'pre_process.py'] + options + subdir.split()
       proc = Popen(cmd)
       proc.communicate()
       
@@ -102,7 +102,7 @@ for scenario in scenarios:
       # SAT12-INDU: POSNEG_RATIO_VAR_entropy,VCG_VAR_coeff_variation,VCG_VAR_entropy,reducedVars,POSNEG_RATIO_VAR_stdev
       # SAT12-RAND: VCG_VAR_mean,VCG_CLAUSE_mean,saps_BestSolution_Mean,VCG_CLAUSE_min,VCG_CLAUSE_max
       
-      cmd = 'python test_scenario.py ' + options + ' -o ' + pred_file \
+      cmd = 'python ' + src_path + 'test_scenario.py ' + options + ' -o ' + pred_file \
 	  + ' --print-static -K ' + subdir + '/kb_' + kb_name + ' ' + test_dir
       proc = Popen(cmd.split())
       proc.communicate()
