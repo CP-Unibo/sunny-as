@@ -22,18 +22,18 @@ Options
 --static-schedule 
   Computes a static schedule. If set, computes a static schedule (B, C) where:
     B: is the backup solver of the given scenario.
-    C: is T/(M * 10), where T is the timeout and M the number of algorithms of 
-       the given scenario.
+    C: is min{10, T/(M * 10)}, where T is the timeout and M the number of 
+       algorithms of the given scenario.
   By default, this option is unset.
   TODO: Add more options for static scheduling.
   
--S <SEARCH CLASS>
+-S "<SEARCH>"
   Sets the search method and its options for WEKA subset evaluators, e.g.:
     -S "weka.attributeSelection.BestFirst -S 8"
   This option is allowed only in conjunction with -E option.
   (TBD)
   
--E <ALGORITHM>
+-E "<EVALUATOR>"
   Sets the attribute/subset evaluator and its options, e.g.:
     -E "weka.attributeSelection.CfsSubsetEval -L"
   This option is allowed only in conjunction with -S option.
@@ -49,6 +49,7 @@ import sys
 import json
 import getopt
 import shutil
+from subprocess import Popen
 
 def parse_arguments(args):
   '''
@@ -115,43 +116,79 @@ def parse_arguments(args):
   info_file = kb_path + '/kb_' + kb_name + '.info'
   return args_file, info_file, scenario, evaluator, search, static_schedule
 
-def select_features(args, info_file, evaluator, search):
+def remove_exp(x):
+  if 'e-' in x or 'E-' in x:
+    return '0'
+  else:
+    return x
+
+def select_features(args, info_file, scenario, evaluator, search):
+  in_path = info_file[:info_file.rfind('/')] + '/feat_in.arff'
+  in_file = open(in_path, 'w')
   
-  # ****************************************************************************
-  # TODO: Tong, please implement this function.
-  # args = python dict containing the arguments of SUNNY (e.g., selected_features, 
-  #  feature_steps,...)
-  # info_file = path of csv file containing feature vectors and runtime infos for each instance
-  # evaluator = WEKA evaluator command
-  # search = WEKA search command
+  reader = csv.reader(open(info_file), delimiter = '|')
+  best = {}
+  for row in reader:
+    best_solvers = [
+      (float(it['time']), s) 
+      for s, it in eval(row[2]).items() 
+      if it['info'] == 'ok'
+    ]
+    if not best_solvers:
+      continue
+    best_solver = min(best_solvers)[1]
+    best[row[0]] = best_solver
   
-  #weka_cmd = 'java -cp weka.jar weka.filters.supervised.attribute.AttributeSelection ' + evaluator + search
-  #....
+  reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
+  pfolio = ','.join(args['portfolio'])
+  for row in reader:
+    if row:
+      if 'instance_id' in row[0] or 'repetition' in row[0]:
+	continue
+      elif row and row[0].strip().upper() == '@DATA':
+	in_file.write('@ATTRIBUTE best_solver {' + pfolio + '}\n\n')
+	in_file.write('@DATA\n')
+	break
+      else:
+	in_file.write(','.join(row) + '\n')
+  for row in reader:
+    if row[0] not in best.keys():
+      continue
+    label = best[row[0]]
+    new_vector = [remove_exp(x) for x in row[2:]] + [label]
+    in_file.write(','.join(new_vector) + '\n')
+    
+  in_file.close()  
+  out_path = info_file[:info_file.rfind('/')] + '/feat_out.arff'
+  weka_cmd = [
+    'java', 'weka.filters.supervised.attribute.AttributeSelection', '-E',
+    evaluator, '-S', search, '-i', in_path, '-o', out_path
+  ]
+  proc = Popen(weka_cmd)
+  proc.communicate()
   
-  # new_features will be the list of the selected features. This is a dummy test
-  # which selects all the training features.
-  selected_features = args['selected_features']
-  feature_steps = args['feature_steps']
-  new_features = selected_features.keys()
-  #
-  #*****************************************************************************
-  
+  new_features = []
+  reader = csv.reader(open(out_path), delimiter = ' ')
+  for row in reader:
+    if row:
+      if row[0] == '@attribute' and row[1] != 'best_solver':
+	new_features.append(row[1])
+      if row[0] == '@data':
+	break
   selected_features = dict(
     (feature, index) 
-    for (feature, index) in selected_features.items() 
+    for (feature, index) in args['selected_features'].items() 
     if feature in new_features
   )
   feature_steps = dict(
     (step, features) 
-    for (step, features) in feature_steps.items()
+    for (step, features) in args['feature_steps'].items()
     if set(features).intersection(new_features)
   )
   return selected_features, feature_steps
   
 
-def compute_schedule(args, max_time = 10):
-  # TODO: Fabio, here you can try different static schedules (maybe setting a 
-  # corresponding options, e.g. --static-schedule <...>)
+def compute_schedule(args, max_time = 10):	
   solver = args['backup']
   time = args['timeout'] / (10 * len(args['portfolio']))
   return [(solver, min(time, max_time))]
@@ -166,7 +203,7 @@ def main(args):
   # Feature selection.
   if evaluator and search:
     selected_features, feature_steps = select_features(
-      args, info_file, evaluator, search
+      args, info_file, scenario, evaluator, search
     )
     args['selected_features'] = selected_features
     args['feature_steps'] = feature_steps

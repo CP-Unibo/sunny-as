@@ -13,9 +13,9 @@ scenarios = [
   #'ASP-POTASSCO',
   #'CSP-2010',
   #'MAXSAT12-PMS',
-  'PREMARSHALLING-ASTAR-2013',
+  #'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
-  #'QBF-2011',
+  'QBF-2011',
   #'SAT11-HAND',
   #'SAT11-INDU',
   #'SAT11-RAND',
@@ -27,6 +27,7 @@ scenarios = [
 
 for scenario in scenarios:
   print 'Evaluating scenario',scenario
+  src_path = '/'.join(in_path) + '/src/'
   path = '/'.join(in_path) + '/data/aslib_1.0.1/' + scenario
   
   print 'Extracting runtimes'
@@ -46,7 +47,7 @@ for scenario in scenarios:
     runtimes[inst][solv] = [info, time]
   
   print 'Splitting scenario',scenario
-  cmd = 'python split_scenario.py ' + path
+  cmd = 'python ' + src_path + 'split_scenario.py ' + path
   proc = Popen(cmd.split())
   proc.communicate()
   fsi = 0.0
@@ -69,14 +70,21 @@ for scenario in scenarios:
       pred_file = test_dir + '/predictions.csv'
       
       print 'Pre-processing',test_dir
-      options = ' --kb-path ' + subdir + '/kb_' + kb_name \
-	      + ' -E TODO -S TODO --static-schedule '
-      cmd = 'python pre_process.py' + options + subdir
-      proc = Popen(cmd.split())
+      options = [
+	'--kb-path', subdir + '/kb_' + kb_name,
+	'-E', 'weka.attributeSelection.InfoGainAttributeEval',
+	#'-E', 'weka.attributeSelection.GainRatioAttributeEval',
+	#'-E', 'weka.attributeSelection.SymmetricalUncertAttributeEval',
+	#'-E', 'weka.attributeSelection.ReliefFAttributeEval',
+	'-S', 'weka.attributeSelection.Ranker -N 5', 
+	'--static-schedule'
+      ]
+      cmd = ['python', 'pre_process.py'] + options + subdir.split()
+      proc = Popen(cmd)
       proc.communicate()
       
       print 'Testing',test_dir
-      options = ' -f container-density,group-same-mean,stacks,group-same-stdev,tiers '
+      options = ' '#-f container-density,group-same-mean,stacks,group-same-stdev,tiers '
       #
       # InfoGain Selected Features (5 features).
       #

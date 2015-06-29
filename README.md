@@ -41,6 +41,9 @@ After the training, it is also possible to define a pre-solving phase with:
   pre_process [OPTIONS] <SCENARIO_PATH>
 
 Note that for performing feature selection the installation of WEKA is required.
+Once WEKA is installed, the CLASSPATH environment variable must point to the jar 
+file weka.jar contained in the weka home folder.
+
 The file evaluate_scenarios.py can be used for testing the different scenarios 
 of ASlib version 1.0.1 (contained in the "data" folder).
 
