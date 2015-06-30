@@ -25,19 +25,21 @@ Options
     C: is min{10, T/(M * 10)}, where T is the timeout and M the number of 
        algorithms of the given scenario.
   By default, this option is unset.
-  TODO: Add more options for static scheduling.
+  TODO: Add more options for static scheduling?
+  
+--filter-portfolio
+  Removes from the portfolio the solvers that are never the best solver for any 
+  instance of the scenario. Unset by default.  
   
 -S "<SEARCH>"
   Sets the search method and its options for WEKA subset evaluators, e.g.:
     -S "weka.attributeSelection.BestFirst -S 8"
   This option is allowed only in conjunction with -E option.
-  (TBD)
   
 -E "<EVALUATOR>"
   Sets the attribute/subset evaluator and its options, e.g.:
     -E "weka.attributeSelection.CfsSubsetEval -L"
   This option is allowed only in conjunction with -S option.
-  (TBD)
   
 --help
   Prints this message.
@@ -51,6 +53,9 @@ import getopt
 import shutil
 from subprocess import Popen
 
+in_path = os.path.realpath(__file__).split('/')[:-2]
+CLASSPATH = '/'.join(in_path) + '/weka.jar'
+
 def parse_arguments(args):
   '''
   Parse the options specified by the user and returns the corresponding
@@ -58,7 +63,7 @@ def parse_arguments(args):
   '''
   try:
     opts, args = getopt.getopt(
-      args, 'S:E:', ['help', 'static-schedule', 'kb-path=']
+      args, 'S:E:', ['help', 'static-schedule', 'filter-portfolio', 'kb-path=']
     )
   except getopt.GetoptError as msg:
     print >> sys.stderr, msg
@@ -87,6 +92,7 @@ def parse_arguments(args):
   evaluator = ''
   search = ''
   static_schedule = False
+  filter_portfolio = False
   kb_path = scenario
   kb_name = 'kb_' + scenario.split('/')[-2]
 
@@ -101,6 +107,8 @@ def parse_arguments(args):
       search = a
     elif o == '--static-schedule':
       static_schedule = True
+    elif o == '--filter-portfolio':
+      filter_portfolio = True
     elif o == '--kb-path':
       if not os.path.exists(a):
         print >> sys.stderr, 'Error! Directory ' + a + ' not exists.'
@@ -114,7 +122,8 @@ def parse_arguments(args):
   kb_name = kb_path.split('/')[-2]
   args_file = kb_path + '/kb_' + kb_name + '.args'
   info_file = kb_path + '/kb_' + kb_name + '.info'
-  return args_file, info_file, scenario, evaluator, search, static_schedule
+  return args_file, info_file, scenario, evaluator, search, static_schedule, \
+    filter_portfolio
 
 def remove_exp(x):
   if 'e-' in x or 'E-' in x:
@@ -122,7 +131,7 @@ def remove_exp(x):
   else:
     return x
 
-def select_features(args, info_file, scenario, evaluator, search):
+def select_features(args, info_file, scenario, evaluator, search, filter_pf):
   in_path = info_file[:info_file.rfind('/')] + '/feat_in.arff'
   in_file = open(in_path, 'w')
   
@@ -138,6 +147,9 @@ def select_features(args, info_file, scenario, evaluator, search):
       continue
     best_solver = min(best_solvers)[1]
     best[row[0]] = best_solver
+  
+  if filter_pf:
+    args['portfolio'] = list(set(best.values()))
   
   reader = csv.reader(open(scenario + 'feature_values.arff'), delimiter = ',')
   pfolio = ','.join(args['portfolio'])
@@ -161,8 +173,9 @@ def select_features(args, info_file, scenario, evaluator, search):
   in_file.close()  
   out_path = info_file[:info_file.rfind('/')] + '/feat_out.arff'
   weka_cmd = [
-    'java', 'weka.filters.supervised.attribute.AttributeSelection', '-E',
-    evaluator, '-S', search, '-i', in_path, '-o', out_path
+    'java', '-cp', CLASSPATH, 
+    'weka.filters.supervised.attribute.AttributeSelection', 
+    '-E', evaluator, '-S', search, '-i', in_path, '-o', out_path
   ]
   proc = Popen(weka_cmd)
   proc.communicate()
@@ -194,8 +207,8 @@ def compute_schedule(args, max_time = 10):
   return [(solver, min(time, max_time))]
 
 def main(args):
-  args_file, info_file, scenario, evaluator, search, static_schedule = \
-    parse_arguments(args)
+  args_file, info_file, scenario, evaluator, search, static_schedule, \
+    filter_portfolio = parse_arguments(args)
   with open(args_file) as infile:
     args = json.load(infile)
   infile.close()
@@ -203,10 +216,23 @@ def main(args):
   # Feature selection.
   if evaluator and search:
     selected_features, feature_steps = select_features(
-      args, info_file, scenario, evaluator, search
+      args, info_file, scenario, evaluator, search, filter_portfolio
     )
     args['selected_features'] = selected_features
     args['feature_steps'] = feature_steps
+  elif filter_portfolio:
+    reader = csv.reader(open(info_file), delimiter = '|')
+    portfolio = set([])
+    for row in reader:
+      best_solvers = [
+        (float(it['time']), s) 
+        for s, it in eval(row[2]).items() 
+        if it['info'] == 'ok'
+      ]
+      if not best_solvers:
+        continue
+      portfolio.add(min(best_solvers)[1])
+    args['portfolio'] = list(portfolio)
   
   # Static schedule.
   if static_schedule:

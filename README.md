@@ -11,11 +11,13 @@ sunny-as tool implements the SUNNY algorithm [1] for a given ASlib [2] scenario.
 REQUIREMENTS
 ============
 
-+ Python 2.x
++ Python v2.x
   https://www.python.org/
 
-+ Weka 3 (only for performing feature selection)
-  http://www.cs.waikato.ac.nz/ml/weka/
++ Java (for feature selection)
+  https://www.java.com
+
+Note that currently this tool is tested only on Ubuntu 64-bit machines.
 
 
 INSTRUCTIONS
@@ -40,9 +42,7 @@ After the training, it is also possible to define a pre-solving phase with:
 
   pre_process [OPTIONS] <SCENARIO_PATH>
 
-Note that for performing feature selection the installation of WEKA is required.
-Once WEKA is installed, the CLASSPATH environment variable must point to the jar 
-file weka.jar contained in the weka home folder.
+Note that for performing feature selection the file weka.jar is used.
 
 The file evaluate_scenarios.py can be used for testing the different scenarios 
 of ASlib version 1.0.1 (contained in the "data" folder).
