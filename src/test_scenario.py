@@ -214,8 +214,12 @@ def main(args):
     if row and row[0].strip().upper() == '@DATA':
       # Iterates until preamble ends.
       break
+  header = 'instanceID,runID,solver,timeLimit'
   if out_file:
     writer = csv.writer(open(out_file, 'w'), delimiter = ',')
+    writer.writerow(header.split(','))
+  else:
+    print header
   for row in reader:
     inst = row[0]
     feat_vector = row[2:]

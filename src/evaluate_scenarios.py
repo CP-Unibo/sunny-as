@@ -10,15 +10,15 @@ from subprocess import Popen
 in_path = os.path.realpath(__file__).split('/')[:-2]
 # List of the scenarios to test.
 scenarios = [
-  'ASP-POTASSCO',
-  'CSP-2010',
-  'MAXSAT12-PMS',
+  #'ASP-POTASSCO',
+  #'CSP-2010',
+  #'MAXSAT12-PMS',
   'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
-  'QBF-2011',
-  'SAT11-HAND',
-  'SAT11-INDU',
-  'SAT11-RAND',
+  #'QBF-2011',
+  #'SAT11-HAND',
+  #'SAT11-INDU',
+  #'SAT11-RAND',
   #'SAT12-ALL',
   #'SAT12-HAND',
   #'SAT12-INDU',
@@ -139,7 +139,11 @@ for scenario in scenarios:
       args_file = subdir + '/kb_' + kb_name + '/kb_' + kb_name + '.args'
       with open(args_file) as infile:
         timeout = json.load(infile)['timeout']
+      first = True
       for row in reader:
+	if first:
+	  first = False
+	  continue
         inst = row[0]
         if inst == old_inst:
           if par:
