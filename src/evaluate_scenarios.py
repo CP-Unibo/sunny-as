@@ -77,14 +77,14 @@ for scenario in scenarios:
 	#'-E', 'weka.attributeSelection.SymmetricalUncertAttributeEval',
 	#'-E', 'weka.attributeSelection.ReliefFAttributeEval',
 	'-S', 'weka.attributeSelection.Ranker -N 5', 
-	'--static-schedule'
+	'--static-schedule', '--filter-portfolio'
       ]
       cmd = ['python', src_path + 'pre_process.py'] + options + subdir.split()
       proc = Popen(cmd)
       proc.communicate()
       
       print 'Testing',test_dir
-      options = ' '#-f container-density,group-same-mean,stacks,group-same-stdev,tiers '
+      options = ' ' #-f container-density,group-same-mean,stacks,group-same-stdev,tiers '
       #
       # InfoGain Selected Features (5 features).
       #
