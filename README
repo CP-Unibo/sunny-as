@@ -48,6 +48,25 @@ The file evaluate_scenarios.py can be used for testing the different scenarios
 of ASlib version 1.0.1 (contained in the "data" folder).
 
 
+EXAMPLE
+=======
+
+This is just an example on QBF-2011 scenario.
+
+1. TRAIN
+
+   sunny-as:$~ python src/train_scenario.py data/aslib_1.0.1/QBF-2011
+
+2. PRESOLVING [optional]
+
+   sunny-as:$~ python src/pre_process.py --kb-path data/aslib_1.0.1/QBF-2011/kb_QBF-2011 
+   -E "weka.attributeSelection.InfoGainAttributeEval" -S "weka.attributeSelection.Ranker -N 5" 
+   --static-schedule --filter-portfolio data/aslib_1.0.1/QBF-2011
+    
+3. TEST
+
+   sunny-as:$~ python src/test_scenario.py -K data/aslib_1.0.1/QBF-2011/kb_QBF-2011 data/aslib_1.0.1/QBF-2011
+
 AUTHOR
 ======
 
