@@ -58,7 +58,7 @@ for scenario in scenarios:
   m = 0
   p = 0
   for subdir, dirs, files in os.walk(path + '/cv_' + scenario):
-    if 'train_' in subdir and 'kb_' not in subdir:
+    if 'train_' in subdir:
       
       print 'Training',subdir
       options = ' --discard --feat-timeout +inf '
