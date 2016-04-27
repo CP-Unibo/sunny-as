@@ -13,12 +13,12 @@ scenarios = [
   #'ASP-POTASSCO',
   #'CSP-2010',
   #'MAXSAT12-PMS',
-  'PREMARSHALLING-ASTAR-2013',
+  #'PREMARSHALLING-ASTAR-2013',
   #'PROTEUS-2014',
   #'QBF-2011',
-  #'SAT11-HAND',
-  #'SAT11-INDU',
-  #'SAT11-RAND',
+  'SAT11-HAND',
+  'SAT11-INDU',
+  'SAT11-RAND',
   #'SAT12-ALL',
   #'SAT12-HAND',
   #'SAT12-INDU',
@@ -77,7 +77,8 @@ for scenario in scenarios:
 	#'-E', 'weka.attributeSelection.SymmetricalUncertAttributeEval',
 	#'-E', 'weka.attributeSelection.ReliefFAttributeEval',
 	'-S', 'weka.attributeSelection.Ranker -N 5', 
-	'--static-schedule', '--filter-portfolio'
+	'--static-schedule', 
+	'--filter-portfolio'
       ]
       cmd = ['python', src_path + 'pre_process.py'] + options + subdir.split()
       proc = Popen(cmd)
@@ -127,6 +128,7 @@ for scenario in scenarios:
 	    # Iterates until preamble ends.
 	    break
 	for row in reader:
+	  feature_cost[row[0]] = sum(float(x) for x in row[2:] if x != '?')
 	  feature_cost[row[0]] = 0
 	  for i in steps:
 	    if row[i] != '?':

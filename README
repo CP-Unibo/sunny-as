@@ -44,9 +44,6 @@ After the training, it is also possible to define a pre-solving phase with:
 
 Note that for performing feature selection the file weka.jar is used.
 
-The file evaluate_scenarios.py can be used for testing the different scenarios 
-of ASlib version 1.0.1 (contained in the "data" folder).
-
 
 EXAMPLE
 =======
